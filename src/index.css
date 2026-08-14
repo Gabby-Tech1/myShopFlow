@@ -1,0 +1,146 @@
+@import '@fontsource/manrope/400.css';
+@import '@fontsource/manrope/500.css';
+@import '@fontsource/manrope/600.css';
+@import '@fontsource/manrope/700.css';
+@import '@fontsource/manrope/800.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-family: theme('fontFamily.sans');
+    font-feature-settings: 'ss01', 'cv11';
+    min-width: 320px;
+  }
+
+  /* Headings sit tighter and darker for a considered, editorial feel. */
+  h1, h2, h3, h4 {
+    @apply tracking-tightest text-ink;
+  }
+
+  /* Tabular figures for all money / numeric data so columns align. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ink/15 ring-offset-2 ring-offset-canvas;
+  }
+
+  ::selection {
+    background: rgba(244, 180, 0, 0.24);
+  }
+
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d9dce2;
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #c3c7cf;
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* Base surface: hairline + soft ambient shadow, restrained radius. */
+  .card {
+    @apply rounded-2xl bg-paper ring-1 ring-black/[0.06] shadow-card;
+  }
+  /* Flat inner surface for nested content — border only, no elevation. */
+  .card-flat {
+    @apply rounded-xl bg-paper ring-1 ring-hair;
+  }
+  /* A quiet, recessed surface (replaces loud colored callout boxes). */
+  .surface-sunken {
+    @apply rounded-xl bg-canvas ring-1 ring-line;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold
+           transition-all duration-300 ease-spring select-none cursor-pointer
+           active:scale-[0.98]
+           disabled:opacity-45 disabled:cursor-not-allowed disabled:active:scale-100
+           focus-visible:ring-2 focus-visible:ring-offset-2;
+  }
+
+  .input {
+    @apply w-full rounded-xl bg-paper px-3.5 py-2.5 text-sm text-ink ring-1 ring-hair shadow-xs
+           placeholder:text-ink-faint transition-shadow duration-200
+           focus:outline-none focus:ring-2 focus:ring-canary/50;
+  }
+
+  select.input {
+    @apply cursor-pointer appearance-none pr-11 font-medium hover:ring-black/20;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.8rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+  }
+
+  select.input:disabled {
+    @apply cursor-not-allowed bg-canvas text-ink-faint;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium
+           transition-colors duration-200 cursor-pointer whitespace-nowrap;
+  }
+
+  .label {
+    @apply block text-[13px] font-semibold text-ink mb-1.5;
+  }
+
+  /* Eyebrow / section kicker — small, spaced, uppercase. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint;
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden bg-black/[0.05] rounded-lg;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+@layer utilities {
+  .page-enter { animation: fade-in 0.35s cubic-bezier(0.32, 0.72, 0, 1) both; }
+  .text-balance { text-wrap: balance; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

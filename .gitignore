@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Production builds
+dist/
+
+# TypeScript build artifacts
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage and caches
+coverage/
+.cache/
+.vite/
+
+# Local agent and editor settings
+.claude/
+.codex/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Vercel local project metadata
+.vercel/
