@@ -11,11 +11,14 @@ const TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/pos': 'Sell / Point of Sale',
   '/products': 'Products & Inventory',
+  '/locations': 'Locations & Warehouses',
   '/customers': 'Customers',
+  '/suppliers': 'Suppliers',
   '/cashflow': 'Cash Flow',
   '/reports': 'Reports',
   '/currency': 'Currency & Exchange Rates',
-  '/activity': 'Activity History',
+  '/activity': 'Audit Logs',
+  '/audit-logs': 'Audit Logs',
   '/settings': 'Settings',
 }
 

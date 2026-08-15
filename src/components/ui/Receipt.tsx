@@ -56,7 +56,7 @@ export function ReceiptModal({ sale, open, onClose }: { sale: Sale | null; open:
           <p className="text-xs text-ink-soft">{business.address}</p>
         </>}
         <div className="mt-3 flex items-center justify-center gap-2">
-          <Badge tone={sale.paid ? 'inflow' : 'warn'} dot>{sale.paid ? 'Paid' : 'Credit — unpaid'}</Badge>
+          <Badge tone={sale.paid ? 'inflow' : 'warn'} dot>{sale.paid ? 'Paid' : 'Credit - unpaid'}</Badge>
           <Badge tone="neutral">{sale.paymentMethod.toUpperCase()}</Badge>
         </div>
       </div>

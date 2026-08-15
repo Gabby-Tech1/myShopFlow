@@ -8,7 +8,9 @@ import type {
   Customer,
   CustomerPayment,
   Expense,
+  Location,
   PaymentMethod,
+  PriceTier,
   Product,
   ProductAttributes,
   Role,
@@ -20,6 +22,7 @@ import type {
 } from '@/types'
 import type { CashEvent } from './engine'
 import { buildSeed } from './seed'
+import { getTemplate } from '@/lib/templates'
 import { uid, receiptNo } from '@/lib/utils'
 
 const DEFAULT_PROFILE: BusinessProfile = {
@@ -56,6 +59,7 @@ export interface SaleInput {
   items: SaleItem[]
   paymentMethod: PaymentMethod
   customerId?: string
+  tier?: PriceTier
 }
 
 interface StoreState {
@@ -69,6 +73,8 @@ interface StoreState {
   users: User[]
   categories: Category[]
   suppliers: { id: string; name: string; phone?: string }[]
+  locations: Location[]
+  activeLocationId: string
   products: Product[]
   customers: Customer[]
   sales: Sale[]
@@ -100,8 +106,22 @@ interface StoreState {
   adjustStock: (id: string, delta: number) => void
   restock: (productId: string, qty: number, unitCost: number, method: 'cash' | 'momo' | 'card', paid: boolean) => void
   addCategory: (name: string, icon?: string) => void
+  addSupplier: (name: string, phone?: string) => void
+  /** Replace the catalogue with an industry starter template (spec: any physical-goods business). */
+  applyBusinessTemplate: (templateId: string) => void
 
-  registerCustomer: (name: string, phone: string, method: 'manual' | 'voice', notes?: string) => Customer
+  // multi-location / warehouses
+  setActiveLocation: (locationId: string) => void
+  addLocation: (name: string, kind: 'shop' | 'warehouse', address?: string) => void
+  transferStock: (productId: string, fromId: string, toId: string, qty: number) => void
+
+  registerCustomer: (
+    name: string,
+    phone: string,
+    method: 'manual' | 'voice',
+    notes?: string,
+    opts?: { type?: PriceTier; company?: string },
+  ) => Customer
   updateCustomer: (id: string, patch: Partial<Customer>) => void
 
   cashAdjustment: (amount: number, direction: 'in' | 'out', reason: string) => void
@@ -132,6 +152,8 @@ function initial() {
     users: s.users,
     categories: s.categories,
     suppliers: s.suppliers,
+    locations: s.locations,
+    activeLocationId: s.locations[0].id,
     products: s.products,
     customers: s.customers,
     sales: s.sales,
@@ -145,6 +167,15 @@ function initial() {
     businessProfile: DEFAULT_PROFILE,
     settings: DEFAULT_SETTINGS,
   }
+}
+
+/** Apply a stock change at a location, keeping `stock` = sum of `stockByLocation`. */
+function applyStockDelta(p: Product, locId: string, delta: number): Product {
+  if (!p.stockByLocation) return { ...p, stock: Math.max(0, p.stock + delta) }
+  const byLoc = { ...p.stockByLocation }
+  byLoc[locId] = Math.max(0, (byLoc[locId] ?? 0) + delta)
+  const total = Object.values(byLoc).reduce((a, b) => a + b, 0)
+  return { ...p, stock: total, stockByLocation: byLoc }
 }
 
 function logActivity(
@@ -200,6 +231,7 @@ export const useStore = create<StoreState>()(
           subtotal,
           total: subtotal,
           paymentMethod: input.paymentMethod,
+          tier: input.tier ?? 'retail',
           paid: !isCredit,
           amountPaid: isCredit ? 0 : subtotal,
           customerId: input.customerId,
@@ -209,7 +241,7 @@ export const useStore = create<StoreState>()(
         set((st) => {
           const products = st.products.map((p) => {
             const line = input.items.find((it) => it.productId === p.id)
-            return line ? { ...p, stock: Math.max(0, p.stock - line.qty) } : p
+            return line ? applyStockDelta(p, st.activeLocationId, -line.qty) : p
           })
           const customers = st.customers.map((c) => {
             if (c.id !== input.customerId) return c
@@ -286,9 +318,11 @@ export const useStore = create<StoreState>()(
         }),
 
       adjustStock: (id, delta) =>
-        set((st) => ({
-          products: st.products.map((p) => (p.id === id ? { ...p, stock: Math.max(0, p.stock + delta) } : p)),
-        })),
+        set((st) => {
+          const product = st.products.find((p) => p.id === id)
+          const act = logActivity(get, { action: 'Stock adjusted', module: 'inventory', refId: id, detail: `${product?.name ?? 'Product'}: ${delta > 0 ? '+' : ''}${delta}` })
+          return { products: st.products.map((p) => (p.id === id ? applyStockDelta(p, st.activeLocationId, delta) : p)), activity: [act, ...st.activity] }
+        }),
 
       restock: (productId, qty, unitCost, method, paid) =>
         set((st) => {
@@ -306,21 +340,95 @@ export const useStore = create<StoreState>()(
             userId: st.currentUserId,
             createdAt: new Date().toISOString(),
           }
-          const products = st.products.map((p) => (p.id === productId ? { ...p, stock: p.stock + qty } : p))
+          const products = st.products.map((p) => (p.id === productId ? applyStockDelta(p, st.activeLocationId, qty) : p))
           const act = logActivity(get, { action: 'Stock received', module: 'inventory', refId: purchase.id, detail: `${qty} × ${product.name}` })
           return { purchases: [...st.purchases, purchase], products, activity: [act, ...st.activity] }
         }),
 
       addCategory: (name, icon) =>
-        set((st) => ({ categories: [...st.categories, { id: uid('c'), name, icon }] })),
+        set((st) => {
+          const category = { id: uid('c'), name, icon }
+          const act = logActivity(get, { action: 'Category added', module: 'inventory', refId: category.id, detail: name })
+          return { categories: [...st.categories, category], activity: [act, ...st.activity] }
+        }),
 
-      registerCustomer: (name, phone, method, notes) => {
+      addSupplier: (name, phone) =>
+        set((st) => {
+          const supplier = { id: uid('sup'), name, phone }
+          const act = logActivity(get, { action: 'Supplier added', module: 'suppliers', refId: supplier.id, detail: name })
+          return { suppliers: [...st.suppliers, supplier], activity: [act, ...st.activity] }
+        }),
+
+      applyBusinessTemplate: (templateId) =>
+        set((st) => {
+          const t = getTemplate(templateId)
+          if (!t) return {}
+          const catId: Record<string, string> = {}
+          const categories = t.categories.map((c) => {
+            const id = uid('c')
+            catId[c.name] = id
+            return { id, name: c.name, icon: c.icon }
+          })
+          const prefix = t.id.slice(0, 3).toUpperCase()
+          const products: Product[] = t.products.map((p, i) => ({
+            id: uid('p'),
+            name: p.name,
+            sku: `${prefix}-${1000 + i}`,
+            categoryId: catId[p.category] ?? categories[0].id,
+            costPrice: p.cost,
+            salePrice: p.retail,
+            wholesalePrice: p.wholesale,
+            wholesaleMinQty: p.wholesaleMin,
+            unit: p.unit ?? 'each',
+            packSize: p.pack,
+            stock: p.stock,
+            threshold: p.threshold,
+            currency: st.businessProfile.baseCurrency,
+            imageIndex: i,
+            createdAt: new Date().toISOString(),
+          }))
+          return { categories, products }
+        }),
+
+      setActiveLocation: (locationId) => set({ activeLocationId: locationId }),
+
+      addLocation: (name, kind, address) =>
+        set((st) => {
+          const location: Location = { id: uid('loc'), name, kind, address }
+          const act = logActivity(get, { action: 'Location added', module: 'inventory', refId: location.id, detail: name })
+          return { locations: [...st.locations, location], activity: [act, ...st.activity] }
+        }),
+
+      // Move stock between locations. Total (`stock`) is unchanged (spec §15 integrity).
+      transferStock: (productId, fromId, toId, qty) =>
+        set((st) => {
+          if (fromId === toId || qty <= 0) return {}
+          const products = st.products.map((p) => {
+            if (p.id !== productId) return p
+            const byLoc = { ...(p.stockByLocation ?? { [st.activeLocationId]: p.stock }) }
+            const available = byLoc[fromId] ?? 0
+            const move = Math.min(qty, available)
+            if (move <= 0) return p
+            byLoc[fromId] = available - move
+            byLoc[toId] = (byLoc[toId] ?? 0) + move
+            return { ...p, stockByLocation: byLoc }
+          })
+          const product = st.products.find((p) => p.id === productId)
+          const from = st.locations.find((l) => l.id === fromId)?.name
+          const to = st.locations.find((l) => l.id === toId)?.name
+          const act = logActivity(get, { action: 'Stock transferred', module: 'inventory', refId: productId, detail: `${qty} × ${product?.name} · ${from} → ${to}` })
+          return { products, activity: [act, ...st.activity] }
+        }),
+
+      registerCustomer: (name, phone, method, notes, opts) => {
         const customer: Customer = {
           id: uid('cu'),
           name,
           phone,
           outstanding: 0,
           notes,
+          type: opts?.type ?? 'retail',
+          company: opts?.company,
           registrationMethod: method,
           createdBy: get().currentUserId,
           createdAt: new Date().toISOString(),
@@ -339,7 +447,11 @@ export const useStore = create<StoreState>()(
       },
 
       updateCustomer: (id, patch) =>
-        set((st) => ({ customers: st.customers.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+        set((st) => {
+          const customer = st.customers.find((c) => c.id === id)
+          const act = logActivity(get, { action: 'Customer updated', module: 'customers', refId: id, detail: customer?.name })
+          return { customers: st.customers.map((c) => (c.id === id ? { ...c, ...patch } : c)), activity: [act, ...st.activity] }
+        }),
 
       cashAdjustment: (amount, direction, reason) =>
         set((st) => {

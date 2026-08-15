@@ -121,7 +121,7 @@ export function CurrencyPage() {
             </div>
           )}
           <p className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">
-            FX rates never change a product’s stored price automatically — you always choose when to apply a conversion.
+            FX rates never change a product’s stored price automatically - you always choose when to apply a conversion.
           </p>
         </Card>
       </div>
@@ -140,7 +140,7 @@ export function CurrencyPage() {
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} minTickGap={24} />
             <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} width={56} tickFormatter={(v) => v.toFixed(2)} />
             <Tooltip {...chartTooltipStyle()} formatter={(v: number) => [`${v.toFixed(4)} ${to}`, `1 ${from}`]} />
-            <Line type="monotone" dataKey="rate" stroke="#F4B400" strokeWidth={2.5} dot={false} />
+            <Line type="monotone" dataKey="rate" stroke="#FF7A1A" strokeWidth={2.5} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>

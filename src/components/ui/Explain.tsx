@@ -14,7 +14,7 @@ interface ExplainProps {
 
 /**
  * Tap-to-explain (mobile) / hover tooltip (desktop). Every complex business
- * term gets one — one short sentence on why the number matters (spec §2).
+ * term gets one - one short sentence on why the number matters (spec §2).
  */
 export function Explain({ term, text, className, inline = true }: ExplainProps) {
   const [open, setOpen] = useState(false)

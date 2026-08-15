@@ -6,11 +6,13 @@ import { Logo } from '@/components/ui/Logo'
 import { Button } from '@/components/ui/Button'
 import { useStore } from '@/store/useStore'
 import { toast } from '@/store/toast'
+import { Icon } from '@/components/ui/Icon'
+import { BUSINESS_TEMPLATES } from '@/lib/templates'
 import type { CurrencyCode } from '@/types'
 import { cn } from '@/lib/utils'
 
 const VALUE_STEPS = [
-  { icon: <Package className="h-6 w-6" />, title: 'Track Everything', desc: 'Every sale, product, customer and expense — captured once and reflected everywhere.' },
+  { icon: <Package className="h-6 w-6" />, title: 'Track Everything', desc: 'Every sale, product, customer and expense - captured once and reflected everywhere.' },
   { icon: <TrendingUp className="h-6 w-6" />, title: 'Understand Your Business', desc: 'Plain-language insights and real cash flow, with no accounting jargon.' },
   { icon: <HandCoins className="h-6 w-6" />, title: 'Grow Smarter', desc: 'Spot your best sellers, protect your margins and collect what you’re owed.' },
 ]
@@ -28,19 +30,23 @@ export function OnboardingPage() {
   const login = useStore((s) => s.login)
   const updateProfile = useStore((s) => s.updateBusinessProfile)
   const updateSettings = useStore((s) => s.updateSettings)
+  const applyBusinessTemplate = useStore((s) => s.applyBusinessTemplate)
   const startDashboardTutorial = useStore((s) => s.startDashboardTutorial)
 
   const [step, setStep] = useState(0) // 0 value-carousel, 1 account, 2 business
   const [valueIdx, setValueIdx] = useState(0)
   const [owner, setOwner] = useState('')
-  const [biz, setBiz] = useState({ name: '', type: 'Retail Shop', currency: 'GHS' as CurrencyCode })
+  const [biz, setBiz] = useState({ name: '', type: 'Retail Shop', template: 'general-retail', currency: 'GHS' as CurrencyCode })
 
   const finish = () => {
-    if (biz.name.trim()) updateProfile({ name: biz.name.trim(), type: biz.type, ownerName: owner.trim() || 'Owner', baseCurrency: biz.currency })
+    const tpl = BUSINESS_TEMPLATES.find((t) => t.id === biz.template)
+    if (biz.name.trim()) updateProfile({ name: biz.name.trim(), type: tpl?.profileType ?? 'Retail Shop', ownerName: owner.trim() || 'Owner', baseCurrency: biz.currency })
     updateSettings({})
+    // Load the starter catalogue for the chosen industry.
+    applyBusinessTemplate(biz.template)
     startDashboardTutorial()
     login('admin')
-    toast.success('You’re all set!', `${biz.name.trim() || 'Your business'} is ready to go.`)
+    toast.success('You’re all set!', `${biz.name.trim() || 'Your business'} is ready with a ${tpl?.name ?? 'starter'} catalogue.`)
     navigate('/dashboard')
   }
 
@@ -98,10 +104,10 @@ export function OnboardingPage() {
                   {valueIdx < VALUE_STEPS.length - 1 ? (
                     <>
                       <Button className="text-white hover:bg-white/10 lg:text-ink lg:hover:bg-canvas" variant="ghost" onClick={() => setStep(1)}>Skip</Button>
-                      <Button onClick={() => setValueIdx((i) => i + 1)}>Next <ArrowRight className="h-4 w-4" /></Button>
+                      <Button onClick={() => setValueIdx((i) => i + 1)} className='text-white'>Next <ArrowRight className="h-4 w-4" /></Button>
                     </>
                   ) : (
-                    <Button size="lg" onClick={() => setStep(1)}>Get started <ArrowRight className="h-5 w-5" /></Button>
+                    <Button size="lg" onClick={() => setStep(1)} className='text-white'>Get started <ArrowRight className="h-5 w-5" /></Button>
                   )}
                 </div>
               </div>
@@ -119,7 +125,7 @@ export function OnboardingPage() {
               </div>
               <div className="mt-8 flex justify-between">
                 <Button variant="ghost" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4" /> Back</Button>
-                <Button onClick={() => setStep(2)}>Continue <ArrowRight className="h-4 w-4" /></Button>
+                <Button onClick={() => setStep(2)} className='text-white'>Continue <ArrowRight className="h-4 w-4" /></Button>
               </div>
             </motion.div>
           )}
@@ -132,11 +138,25 @@ export function OnboardingPage() {
               <div className="mt-6 space-y-4">
                 <div><label className="label">Business name</label><input className="input" placeholder="e.g. Ama's Variety Store" value={biz.name} onChange={(e) => setBiz({ ...biz, name: e.target.value })} autoFocus /></div>
                 <div>
-                  <label className="label">Business type</label>
-                  <div className="flex flex-wrap gap-2">
-                    {TYPES.map((t) => (
-                      <button key={t} onClick={() => setBiz({ ...biz, type: t })} className={cn('chip border', biz.type === t ? 'bg-ink text-white border-ink' : 'bg-paper border-hair text-ink-soft hover:border-ink/30')}>{t}</button>
-                    ))}
+                  <label className="label">What do you sell? <span className="font-normal text-ink-faint">— we’ll load a starter catalogue</span></label>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {BUSINESS_TEMPLATES.map((t) => {
+                      const active = biz.template === t.id
+                      return (
+                        <button
+                          key={t.id}
+                          onClick={() => setBiz({ ...biz, template: t.id })}
+                          className={cn(
+                            'flex flex-col items-start gap-1.5 rounded-2xl p-3 text-left ring-1 transition-all duration-200',
+                            active ? 'bg-canary-50 ring-canary' : 'bg-paper ring-hair hover:ring-ink/25',
+                          )}
+                        >
+                          <span className={cn('grid h-8 w-8 place-items-center rounded-lg', active ? 'bg-canary text-ink' : 'bg-canvas text-ink-soft')}><Icon name={t.icon} className="h-4 w-4" strokeWidth={2} /></span>
+                          <span className="text-[13px] font-bold leading-tight text-ink">{t.name}</span>
+                          <span className="text-[11px] leading-snug text-ink-soft">{t.description}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
                 <div>
@@ -150,7 +170,7 @@ export function OnboardingPage() {
               </div>
               <div className="mt-8 flex justify-between">
                 <Button variant="ghost" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4" /> Back</Button>
-                <Button size="lg" onClick={finish}>Enter MyShopFlow <ArrowRight className="h-5 w-5" /></Button>
+                <Button size="lg" onClick={finish} className='text-white'>Enter MyShop<ArrowRight className="h-5 w-5" /></Button>
               </div>
             </motion.div>
           )}

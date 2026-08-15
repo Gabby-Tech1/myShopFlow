@@ -19,7 +19,9 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     section: 'Manage',
     items: [
       { to: '/products', label: 'Products', icon: 'Package' },
+      { to: '/locations', label: 'Locations', icon: 'Warehouse' },
       { to: '/customers', label: 'Customers', icon: 'Users' },
+      { to: '/suppliers', label: 'Suppliers', icon: 'Truck', cap: 'suppliers' },
       { to: '/cashflow', label: 'Cash Flow', icon: 'ArrowRightLeft', cap: 'cashflow' },
       { to: '/reports', label: 'Reports', icon: 'BarChart3', cap: 'reports' },
     ],
@@ -28,7 +30,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     section: 'Tools',
     items: [
       { to: '/currency', label: 'Currency & FX', icon: 'Coins' },
-      { to: '/activity', label: 'Activity History', icon: 'History', cap: 'activity' },
+      { to: '/audit-logs', label: 'Audit Logs', icon: 'ClipboardList', cap: 'activity' },
       { to: '/settings', label: 'Settings', icon: 'Settings' },
     ],
   },

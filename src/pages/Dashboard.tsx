@@ -97,7 +97,7 @@ export function DashboardPage() {
     <div className="space-y-7">
       <DashboardTutorial />
       {/* Header */}
-      <div className="flex flex-col gap-4 border-b border-hair pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div data-tour="dashboard-header" className="flex flex-col gap-4 border-b border-hair pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow mb-2">Business overview</p>
           <h2 className="text-2xl font-extrabold text-ink sm:text-[28px]">{greeting}, {user?.name.split(' ')[0]}</h2>
@@ -144,15 +144,16 @@ export function DashboardPage() {
       {/* Best-of cards */}
       {canFin && (
         <div className="grid gap-3 sm:grid-cols-3">
-          <BestCard icon={<Trophy className="h-5 w-5" />} term="Best Seller" label="Best Seller" primary={seller?.name ?? '—'} secondary={seller ? `${seller.units} units sold` : 'No sales yet'} />
-          <BestCard icon={<CalendarDays className="h-5 w-5" />} label="Best Month" primary={month?.month.split(' ')[0] ?? '—'} secondary={month ? money(month.total) : 'No sales yet'} />
-          <BestCard icon={<CalendarCheck className="h-5 w-5" />} label="Best Sales Day" primary={day ? new Date(day.date).toLocaleDateString('en-GB', { weekday: 'long' }) : '—'} secondary={day ? money(day.total) : 'No sales yet'} />
+          <BestCard icon={<Trophy className="h-5 w-5" />} term="Best Seller" label="Best Seller" primary={seller?.name ?? '-'} secondary={seller ? `${seller.units} units sold` : 'No sales yet'} />
+          <BestCard icon={<CalendarDays className="h-5 w-5" />} label="Best Month" primary={month?.month.split(' ')[0] ?? '-'} secondary={month ? money(month.total) : 'No sales yet'} />
+          <BestCard icon={<CalendarCheck className="h-5 w-5" />} label="Best Sales Day" primary={day ? new Date(day.date).toLocaleDateString('en-GB', { weekday: 'long' }) : '-'} secondary={day ? money(day.total) : 'No sales yet'} />
         </div>
       )}
 
       {/* Trend + Live Pulse */}
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard
+          dataTour="performance-trend"
           className="lg:col-span-2"
           title="Sales & profit trend"
           summary={
@@ -166,15 +167,15 @@ export function DashboardPage() {
             <AreaChart data={trend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
               <defs>
                 <linearGradient id="gSales" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#F4B400" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#F4B400" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#FF7A1A" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#FF7A1A" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#EEF0F3" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} minTickGap={20} />
               <YAxis tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} width={54} tickFormatter={(v) => money(v, 'GHS', { decimals: 0 })} />
               <Tooltip {...chartTooltipStyle()} formatter={(v: number, n) => [money(v), n === 'sales' ? 'Sales' : 'Profit']} />
-              <Area type="monotone" dataKey="sales" stroke="#F4B400" strokeWidth={2.5} fill="url(#gSales)" />
+              <Area type="monotone" dataKey="sales" stroke="#FF7A1A" strokeWidth={2.5} fill="url(#gSales)" />
               {canFin && <Area type="monotone" dataKey="profit" stroke="#0E9F6E" strokeWidth={2} fillOpacity={0} />}
             </AreaChart>
           </ResponsiveContainer>
@@ -186,8 +187,8 @@ export function DashboardPage() {
       {/* Lower grid */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Insights */}
-        <Card className="overflow-hidden lg:col-span-2">
-          <CardHeader title="Business Insights" subtitle="Facts drawn from your real data — never guesses." />
+        <Card data-tour="business-insights" className="overflow-hidden lg:col-span-2">
+          <CardHeader title="Business Insights" subtitle="Facts drawn from your real data - never guesses." />
           <div className="grid gap-2.5 p-5 pt-3 sm:grid-cols-2">
             {insights.length === 0 && <EmptyState title="No insights yet" description="Record some sales to see insights." />}
             {insights.map((ins, i) => (
@@ -204,12 +205,13 @@ export function DashboardPage() {
         {/* Voice card + quick actions */}
         <div className="space-y-4">
           <button
+            data-tour="voice-registration"
             onClick={() => openModal('registerCustomer')}
             className="group w-full overflow-hidden rounded-2xl bg-ink p-5 text-left text-white shadow-card transition-transform hover:-translate-y-0.5 cursor-pointer"
           >
             <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-canary text-ink"><Mic className="h-5 w-5" /></div>
             <p className="text-base font-bold">Register a customer by voice</p>
-            <p className="mt-1 text-sm text-white/70">Speak their name and number — we capture it for you.</p>
+            <p className="mt-1 text-sm text-white/70">Speak their name and number - we capture it for you.</p>
             <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-canary">Start <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
           </button>
 
@@ -227,7 +229,7 @@ export function DashboardPage() {
 
       {/* Low stock + recent activity */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card data-tour="low-stock">
           <CardHeader title="Low stock" term="Low Stock" action={<Link to="/products" className="text-sm font-semibold text-canary-700 hover:underline">View all</Link>} />
           <div className="p-3 pt-2">
             {low.length === 0 ? (
@@ -243,8 +245,8 @@ export function DashboardPage() {
           </div>
         </Card>
 
-        <Card>
-          <CardHeader title="Recent activity" action={<Link to="/activity" className="text-sm font-semibold text-canary-700 hover:underline">View all</Link>} />
+        <Card data-tour="recent-activity">
+          <CardHeader title="Recent activity" action={<Link to="/audit-logs" className="text-sm font-semibold text-canary-700 hover:underline">View all</Link>} />
           <div className="p-3 pt-2">
             {store.activity.slice(0, 5).map((a) => (
               <div key={a.id} className="flex items-start gap-3 rounded-xl px-2 py-2.5">
@@ -262,11 +264,24 @@ export function DashboardPage() {
   )
 }
 
-const TUTORIAL_STEPS = [
+const DESKTOP_TUTORIAL_STEPS = [
   { selector: '[data-tour="dashboard-overview"]', title: 'Your business at a glance', text: 'These cards show the numbers that need your attention today. They update automatically as your team works.' },
   { selector: '[data-tour="pos-navigation"]', title: 'Start every sale here', text: 'Open the point of sale to add products, choose a payment method and complete a transaction.' },
   { selector: '[data-tour="products-navigation"]', title: 'Keep inventory accurate', text: 'Add products, restock items and see what is running low from the Products workspace.' },
   { selector: '[data-tour="quick-actions"]', title: 'Create anything quickly', text: 'Use this button from anywhere to record a sale, expense, payment, product or customer.' },
+  { selector: '[data-tour="performance-trend"]', title: 'See how sales are moving', text: 'Use this chart to compare sales and profit across the selected reporting period.' },
+  { selector: '[data-tour="business-insights"]', title: 'Turn activity into insight', text: 'MyShopFlow highlights useful patterns from your real sales, stock and customer data.' },
+  { selector: '[data-tour="recent-activity"]', title: 'Review recent work', text: 'Admins can open Audit Logs to review actions by staff member, module and date.' },
+]
+
+const MOBILE_TUTORIAL_STEPS = [
+  { selector: '[data-tour="dashboard-header"]', title: 'Welcome to your dashboard', text: 'Start here to choose a period and understand which business view you are looking at.' },
+  { selector: '[data-tour="dashboard-overview"]', title: 'Your business at a glance', text: 'These cards show the numbers that need your attention today and update as work is recorded.' },
+  { selector: '[data-tour="performance-trend"]', title: 'Follow sales performance', text: 'See how sales and profit change across the reporting period you selected.' },
+  { selector: '[data-tour="business-insights"]', title: 'Notice useful patterns', text: 'Insights turn your real sales, stock and customer activity into clear observations.' },
+  { selector: '[data-tour="voice-registration"]', title: 'Register customers faster', text: 'Capture a customer name and phone number by voice, then review the details before saving.' },
+  { selector: '[data-tour="low-stock"]', title: 'Stay ahead of low stock', text: 'See which products need attention before they interrupt your next sale.' },
+  { selector: '[data-tour="recent-activity"]', title: 'Review recent work', text: 'Admins can open Audit Logs to review actions by staff member, module and date.' },
 ]
 
 function DashboardTutorial() {
@@ -274,10 +289,12 @@ function DashboardTutorial() {
   const complete = useStore((s) => s.completeDashboardTutorial)
   const [step, setStep] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const mobile = window.matchMedia('(max-width: 639px)').matches
+  const tutorialSteps = mobile ? MOBILE_TUTORIAL_STEPS : DESKTOP_TUTORIAL_STEPS
   useLayoutEffect(() => {
     if (hasSeen) return
     const update = () => {
-      const el = document.querySelector(TUTORIAL_STEPS[step].selector)
+      const el = document.querySelector(tutorialSteps[step].selector)
       if (el) {
         el.scrollIntoView({ block: 'center', behavior: 'smooth' })
         window.setTimeout(() => setRect(el.getBoundingClientRect()), 180)
@@ -285,13 +302,20 @@ function DashboardTutorial() {
     }
     update()
     window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [step, hasSeen])
+    window.addEventListener('scroll', update, true)
+    window.visualViewport?.addEventListener('resize', update)
+    window.visualViewport?.addEventListener('scroll', update)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+      window.visualViewport?.removeEventListener('resize', update)
+      window.visualViewport?.removeEventListener('scroll', update)
+    }
+  }, [step, hasSeen, tutorialSteps])
   if (hasSeen) return null
-  const item = TUTORIAL_STEPS[step]
+  const item = tutorialSteps[step]
   const finish = () => complete()
   const pad = 8
-  const mobile = window.innerWidth < 640
   const cardWidth = Math.min(360, window.innerWidth - 24)
   const preferRight = rect ? rect.right + cardWidth + 28 < window.innerWidth : false
   const left = mobile ? 12 : rect ? (preferRight ? rect.right + 18 : Math.max(12, Math.min(rect.left, window.innerWidth - cardWidth - 12))) : 24
@@ -303,13 +327,13 @@ function DashboardTutorial() {
       {rect && <div className="pointer-events-none fixed rounded-[14px] ring-2 ring-canary shadow-[0_0_0_4px_rgba(244,180,0,.18)]" style={{ left: rect.left - pad, top: rect.top - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }} />}
       <div role="dialog" aria-label="Product tour" className="fixed overflow-hidden rounded-2xl bg-white ring-1 ring-black/10 shadow-pop animate-scale-in" style={{ left, top, width: cardWidth }}>
         <div className="border-b border-hair px-5 pb-4 pt-5">
-          <div className="flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-[0.14em] text-canary-700">Getting started · {step + 1} of {TUTORIAL_STEPS.length}</span><button onClick={finish} aria-label="Close tour" className="text-ink-faint hover:text-ink"><X className="h-4 w-4" /></button></div>
+          <div className="flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-[0.14em] text-canary-700">Getting started · {step + 1} of {tutorialSteps.length}</span><button onClick={finish} aria-label="Close tour" className="text-ink-faint hover:text-ink"><X className="h-4 w-4" /></button></div>
           <h2 className="mt-3 text-lg font-extrabold text-ink">{item.title}</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">{item.text}</p>
         </div>
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={finish} className="px-2 text-xs font-semibold text-ink-soft hover:text-ink">Skip tour</button>
-          <div className="flex gap-2">{step > 0 && <Button size="sm" variant="ghost" onClick={() => setStep((i) => i - 1)}>Back</Button>}<Button size="sm" onClick={() => step === TUTORIAL_STEPS.length - 1 ? finish() : setStep((i) => i + 1)}>{step === TUTORIAL_STEPS.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="h-3.5 w-3.5" /></Button></div>
+          <div className="flex gap-2">{step > 0 && <Button size="sm" variant="ghost" onClick={() => setStep((i) => i - 1)}>Back</Button>}<Button size="sm" onClick={() => step === tutorialSteps.length - 1 ? finish() : setStep((i) => i + 1)}>{step === tutorialSteps.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="h-3.5 w-3.5" /></Button></div>
         </div>
       </div>
     </div>

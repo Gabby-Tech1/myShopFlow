@@ -103,7 +103,7 @@ export function rateForDate(
     usedDate,
     note:
       clamped !== offset
-        ? 'No future rate exists — showing the latest available reference rate.'
+        ? 'No future rate exists - showing the latest available reference rate.'
         : undefined,
   }
 }

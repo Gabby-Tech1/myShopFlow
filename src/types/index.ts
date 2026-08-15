@@ -10,11 +10,29 @@ export type PaymentMethod = 'cash' | 'momo' | 'card' | 'credit'
 
 export type RegistrationMethod = 'manual' | 'voice'
 
+/** Pricing channel — retail (walk-in) vs wholesale (bulk / business accounts). */
+export type PriceTier = 'retail' | 'wholesale'
+
+/** Unit a product is stocked and sold in — supports any physical goods. */
+export type UnitOfMeasure =
+  | 'each'
+  | 'pack'
+  | 'carton'
+  | 'box'
+  | 'dozen'
+  | 'kg'
+  | 'g'
+  | 'litre'
+  | 'ml'
+  | 'metre'
+  | 'pair'
+  | 'set'
+
 /** Cash-flow classification (spec §8). */
 export type CashType = 'operating' | 'investing' | 'financing'
 export type CashDirection = 'in' | 'out'
 
-/** What originally created a cash movement — used for drill-down (spec §8/§9). */
+/** What originally created a cash movement - used for drill-down (spec §8/§9). */
 export type CashSource =
   | 'sale'
   | 'customer_payment'
@@ -52,6 +70,14 @@ export interface Supplier {
   phone?: string
 }
 
+/** A stock-holding location — a shop, branch or warehouse (spec: scale to branches). */
+export interface Location {
+  id: string
+  name: string
+  kind: 'shop' | 'warehouse'
+  address?: string
+}
+
 export interface Category {
   id: string
   name: string
@@ -76,11 +102,24 @@ export interface Product {
   sku: string
   categoryId: string
   costPrice: number // admin-only in the UI
-  salePrice: number
+  salePrice: number // retail price per unit
+  /** Wholesale (bulk) price per unit — optional. */
+  wholesalePrice?: number
+  /** Minimum quantity to qualify for the wholesale price. */
+  wholesaleMinQty?: number
+  /** The unit this product is stocked and sold in. */
+  unit: UnitOfMeasure
+  /** Units contained in one purchase pack/carton (buy in packs, sell in units). */
+  packSize?: number
+  /** Total stock across all locations. */
   stock: number
+  /** Per-location stock breakdown; sums to `stock`. Absent = single location. */
+  stockByLocation?: Record<string, number>
   threshold: number
   currency: CurrencyCode
   supplierId?: string
+  /** Optional barcode for scanning at the counter or receiving. */
+  barcode?: string
   /** Cell index in the shared 4x4 catalogue image sprite. */
   imageIndex?: number
   /** User-uploaded product image stored as a compressed data URL. */
@@ -96,6 +135,9 @@ export interface SaleItem {
   unitPrice: number
   unitCost: number // captured at sale time for COGS/profit
   lineTotal: number
+  unit?: UnitOfMeasure
+  /** Pricing tier applied to this line (retail vs wholesale). */
+  tier?: PriceTier
 }
 
 export interface Sale {
@@ -105,6 +147,8 @@ export interface Sale {
   subtotal: number
   total: number
   paymentMethod: PaymentMethod
+  /** Pricing channel this sale used. */
+  tier: PriceTier
   /** false for a credit sale until settled */
   paid: boolean
   amountPaid: number
@@ -130,6 +174,10 @@ export interface Customer {
   outstanding: number
   notes?: string
   registrationMethod: RegistrationMethod
+  /** retail (walk-in) or wholesale (business account that gets bulk pricing). */
+  type: PriceTier
+  /** Business name for wholesale accounts. */
+  company?: string
   createdBy: string
   createdAt: string
   lastVisit?: string

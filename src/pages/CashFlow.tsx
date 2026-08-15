@@ -40,9 +40,9 @@ import {
 } from '@/store/selectors'
 
 const TYPE_META: Record<CashType, { label: string; icon: React.ReactNode; blurb: string }> = {
-  operating: { label: 'Operating', icon: <ShoppingCart className="h-4 w-4" />, blurb: 'Everyday business — sales, customer payments, wages and normal expenses.' },
+  operating: { label: 'Operating', icon: <ShoppingCart className="h-4 w-4" />, blurb: 'Everyday business - sales, customer payments, wages and normal expenses.' },
   investing: { label: 'Investing', icon: <Building2 className="h-4 w-4" />, blurb: 'Buying or selling long-term assets like equipment, furniture or a vehicle.' },
-  financing: { label: 'Financing', icon: <Landmark className="h-4 w-4" />, blurb: 'Funding the business or taking money out — owner funds, loans and withdrawals.' },
+  financing: { label: 'Financing', icon: <Landmark className="h-4 w-4" />, blurb: 'Funding the business or taking money out - owner funds, loans and withdrawals.' },
 }
 
 export function CashFlowPage() {
@@ -72,7 +72,7 @@ export function CashFlowPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Financial clarity" title="Follow every cedi through the business" description="Understand what came in, what went out and what remains—without accounting jargon." action={<Button size="sm" onClick={() => setAdjustOpen(true)}><Plus className="h-4 w-4" /> Add adjustment</Button>} />
+      <PageHero eyebrow="Financial clarity" title="Follow every cedi through the business" description="Understand what came in, what went out and what remains-without accounting jargon." action={<Button size="sm" onClick={() => setAdjustOpen(true)}><Plus className="h-4 w-4" /> Add adjustment</Button>} />
       {/* Range */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ink-soft">The record of money actually entering and leaving your business.</p>
@@ -143,7 +143,7 @@ export function CashFlowPage() {
             <Tooltip {...chartTooltipStyle()} formatter={(v: number, n) => [money(v), n]} />
             <Bar dataKey="In" radius={[6, 6, 0, 0]} fill="#0E9F6E" />
             <Bar dataKey="Out" radius={[6, 6, 0, 0]}>
-              {chartData.map((_, i) => <Cell key={i} fill="#E0551A" />)}
+              {chartData.map((_, i) => <Cell key={i} fill="#E54800" />)}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -171,7 +171,7 @@ export function CashFlowPage() {
                   </div>
                   {t === 'investing' && b.out > 0 && (
                     <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
-                      A downward Investing figure means cash was spent on long-term assets — money you still own as equipment, not a loss.
+                      A downward Investing figure means cash was spent on long-term assets - money you still own as equipment, not a loss.
                     </p>
                   )}
                 </>
@@ -243,7 +243,7 @@ function AdjustModal({ open, onClose }: { open: boolean; onClose: () => void }) 
   const submit = () => {
     if (amt <= 0 || !reason.trim()) return
     cashAdjustment(amt, direction, reason.trim())
-    toast.success('Cash adjusted', `${direction === 'in' ? 'Added' : 'Removed'} ${money(amt)} — ${reason.trim()}.`)
+    toast.success('Cash adjusted', `${direction === 'in' ? 'Added' : 'Removed'} ${money(amt)} - ${reason.trim()}.`)
     setAmount(''); setReason('')
     onClose()
   }

@@ -10,12 +10,14 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { StatTile } from '@/components/ui/StatTile'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Explain } from '@/components/ui/Explain'
 import { PageHero } from '@/components/ui/PageHero'
 import { ProductImage } from '@/components/ui/ProductImage'
 import { money } from '@/lib/format'
+import { UNIT_LABEL, UNIT_OPTIONS, unitAbbr, hasWholesale } from '@/lib/pricing'
 import { fmtDate } from '@/lib/datetime'
 import { cn } from '@/lib/utils'
-import type { Product, ProductAttributes } from '@/types'
+import type { Product, ProductAttributes, UnitOfMeasure } from '@/types'
 import { inventoryValue, lowStock, retailValue, stockStatus } from '@/store/selectors'
 
 type StatusFilter = 'all' | 'ok' | 'low' | 'out'
@@ -136,25 +138,32 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
   const canCost = useCan('costPrice')
   const [step, setStep] = useState(1)
   const [categoryId, setCategoryId] = useState('')
-  const [form, setForm] = useState({ name: '', sku: '', costPrice: '', salePrice: '', stock: '', threshold: '10', supplierId: '' })
+  const emptyForm = { name: '', sku: '', costPrice: '', salePrice: '', wholesalePrice: '', wholesaleMinQty: '', unit: 'each' as UnitOfMeasure, packSize: '', stock: '', threshold: '10', supplierId: '' }
+  const [form, setForm] = useState(emptyForm)
   const [attrsOn, setAttrsOn] = useState(false)
   const [attrs, setAttrs] = useState<ProductAttributes>({})
   const [imageUrl, setImageUrl] = useState<string>()
 
   useEffect(() => {
     if (open) {
-      setStep(1); setCategoryId(''); setForm({ name: '', sku: '', costPrice: '', salePrice: '', stock: '', threshold: '10', supplierId: '' }); setAttrsOn(false); setAttrs({}); setImageUrl(undefined)
+      setStep(1); setCategoryId(''); setForm(emptyForm); setAttrsOn(false); setAttrs({}); setImageUrl(undefined)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   const save = () => {
     if (!form.name || !form.salePrice) return
+    const wholesale = parseFloat(form.wholesalePrice)
     addProduct({
       name: form.name,
       sku: form.sku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
       categoryId,
       costPrice: parseFloat(form.costPrice) || 0,
       salePrice: parseFloat(form.salePrice) || 0,
+      wholesalePrice: wholesale > 0 ? wholesale : undefined,
+      wholesaleMinQty: wholesale > 0 ? parseInt(form.wholesaleMinQty) || 1 : undefined,
+      unit: form.unit,
+      packSize: parseInt(form.packSize) || undefined,
       stock: parseInt(form.stock) || 0,
       threshold: parseInt(form.threshold) || 10,
       supplierId: form.supplierId || undefined,
@@ -170,7 +179,7 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
       open={open}
       onClose={onClose}
       title="Add product"
-      description={step === 1 ? 'Step 1 of 2 — choose a category' : 'Step 2 of 2 — product details'}
+      description={step === 1 ? 'Step 1 of 2 - choose a category' : 'Step 2 of 2 - product details'}
       footer={
         step === 1 ? (
           <>
@@ -226,8 +235,33 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
               </div>
             )}
             <div>
-              <label className="label" htmlFor="np-sale">Sale price</label>
+              <label className="label" htmlFor="np-sale">Retail price</label>
               <input id="np-sale" className="input tnum" inputMode="decimal" placeholder="0.00" value={form.salePrice} onChange={(e) => setForm({ ...form, salePrice: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label" htmlFor="np-unit">Sold by (unit)</label>
+              <select id="np-unit" className="input" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value as UnitOfMeasure })}>
+                {UNIT_OPTIONS.map((u) => <option key={u} value={u}>{UNIT_LABEL[u].name} ({UNIT_LABEL[u].abbr})</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label flex items-center" htmlFor="np-pack">Units per pack <Explain text="If you buy in cartons/packs but sell in single units, enter how many units are in one pack." /></label>
+              <input id="np-pack" className="input tnum" inputMode="numeric" placeholder="e.g. 24" value={form.packSize} onChange={(e) => setForm({ ...form, packSize: e.target.value })} />
+            </div>
+          </div>
+          <div className="rounded-xl bg-canvas ring-1 ring-line p-3">
+            <p className="mb-2 flex items-center text-[13px] font-semibold text-ink">Wholesale pricing <Explain text="An optional bulk price applied when a wholesale customer buys at least the minimum quantity." /></p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label" htmlFor="np-whole">Wholesale price</label>
+                <input id="np-whole" className="input tnum" inputMode="decimal" placeholder="optional" value={form.wholesalePrice} onChange={(e) => setForm({ ...form, wholesalePrice: e.target.value })} />
+              </div>
+              <div>
+                <label className="label" htmlFor="np-wmin">Min quantity</label>
+                <input id="np-wmin" className="input tnum" inputMode="numeric" placeholder="e.g. 12" value={form.wholesaleMinQty} onChange={(e) => setForm({ ...form, wholesaleMinQty: e.target.value })} />
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -314,7 +348,7 @@ function ProductDetailModal({ product, onClose, onEdit }: { product: Product | n
           {canCost && <Row label="Inventory value" value={money(product.costPrice * product.stock)} />}
           <Row label="In stock" value={<div className="flex items-center gap-2"><span className="tnum font-bold">{product.stock}</span> <StockPill product={product} /></div>} />
           <Row label="Low-stock alert" value={`${product.threshold} units`} />
-          <Row label="Supplier" value={supplier?.name ?? '—'} />
+          <Row label="Supplier" value={supplier?.name ?? '-'} />
           {product.attributes && Object.entries(product.attributes).filter(([, v]) => v).map(([k, v]) => (
             <Row key={k} label={k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())} value={String(v)} />
           ))}

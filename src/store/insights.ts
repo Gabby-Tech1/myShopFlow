@@ -17,7 +17,7 @@ export interface Insight {
   text: string
 }
 
-// Factual observations from real data only — never speculative (spec §2/§4).
+// Factual observations from real data only - never speculative (spec §2/§4).
 export function buildInsights(
   sales: Sale[],
   products: Product[],

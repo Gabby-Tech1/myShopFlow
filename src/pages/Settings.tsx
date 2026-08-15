@@ -208,7 +208,7 @@ function FxPanel() {
         <div><p className="text-sm font-semibold text-ink">FX provider</p><p className="text-xs text-ink-soft">Demo rates · abstracted behind the backend in production</p></div>
         <Badge tone={settings.fxProviderConnected ? 'inflow' : 'danger'} dot>{settings.fxProviderConnected ? 'Connected' : 'Offline'}</Badge>
       </div>
-      <StateRow label="Last successful sync" value={settings.fxLastSync ? fmtDateTime(settings.fxLastSync) : '—'} />
+      <StateRow label="Last successful sync" value={settings.fxLastSync ? fmtDateTime(settings.fxLastSync) : '-'} />
       <StateRow label="Preferred rate display" value="Mid-Market Rate" />
       <Button variant="outline" onClick={() => { update({ fxLastSync: new Date().toISOString() }); toast.success('Rates refreshed', 'Latest demo reference rates loaded.') }}><RefreshCw className="h-4 w-4" /> Refresh now</Button>
       <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">API credentials stay on the backend and are never shown here.</p>
@@ -223,7 +223,7 @@ function StaffPanel() {
   const regen = useStore((s) => s.regeneratePin)
   const [name, setName] = useState('')
   return (
-    <Panel title="Users & Staff" description="Staff don’t self-register — you invite them and manage access.">
+    <Panel title="Users & Staff" description="Staff don’t self-register - you invite them and manage access.">
       <div className="flex gap-2">
         <input className="input" placeholder="New staff name" value={name} onChange={(e) => setName(e.target.value)} />
         <Button onClick={() => { if (!name.trim()) return; addStaff(name.trim()); toast.success('Staff added', `${name.trim()} can now sign in with a PIN.`); setName('') }}>Add</Button>
@@ -267,8 +267,8 @@ function RolesPanel() {
             {ROLE_MATRIX.map(([area, a, s]) => (
               <tr key={area} className="border-b border-hair last:border-0">
                 <td className="px-4 py-2.5 text-ink">{area}</td>
-                <td className="px-4 py-2.5 text-center">{a ? <Check className="mx-auto h-4 w-4 text-inflow" /> : <span className="text-ink-soft">—</span>}</td>
-                <td className="px-4 py-2.5 text-center">{s ? <Check className="mx-auto h-4 w-4 text-inflow" /> : <span className="text-ink-soft">—</span>}</td>
+                <td className="px-4 py-2.5 text-center">{a ? <Check className="mx-auto h-4 w-4 text-inflow" /> : <span className="text-ink-soft">-</span>}</td>
+                <td className="px-4 py-2.5 text-center">{s ? <Check className="mx-auto h-4 w-4 text-inflow" /> : <span className="text-ink-soft">-</span>}</td>
               </tr>
             ))}
           </tbody>
@@ -442,7 +442,7 @@ function HelpPanel() {
       <div className="grid gap-2 sm:grid-cols-3">
         {['Help center', 'Privacy', 'Terms'].map((l) => <button key={l} className="rounded-xl border border-hair px-3 py-2.5 text-sm font-semibold text-ink hover:border-canary hover:bg-canary-50 cursor-pointer">{l}</button>)}
       </div>
-      <p className="text-sm text-ink-soft">MyShopFlow — Smart Inventory. Smarter Cash Flow.</p>
+      <p className="text-sm text-ink-soft">MyShopFlow - Smart Inventory. Smarter Cash Flow.</p>
     </Panel>
   )
 }

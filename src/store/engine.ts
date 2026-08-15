@@ -47,7 +47,7 @@ type Raw = Omit<CashTxn, 'balanceAfter'>
 export function buildLedger(s: LedgerSources): CashTxn[] {
   const raw: Raw[] = []
 
-  // Paid sales → operating inflow (credit sales add NO cash — spec §8).
+  // Paid sales → operating inflow (credit sales add NO cash - spec §8).
   for (const sale of s.sales) {
     if (sale.paid && sale.amountPaid > 0) {
       raw.push({
@@ -114,7 +114,7 @@ export function buildLedger(s: LedgerSources): CashTxn[] {
         source: 'stock_purchase',
         sourceId: pu.id,
         userId: pu.userId,
-        description: `Restock — ${pu.productName}`,
+        description: `Restock - ${pu.productName}`,
       })
     }
   }

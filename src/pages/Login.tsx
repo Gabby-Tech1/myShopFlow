@@ -24,7 +24,7 @@ export function LoginPage() {
   return (
     <div className="grid min-h-screen bg-[#F8F8F6] lg:grid-cols-[0.9fr_1.1fr]">
       {/* Form */}
-      <div className="flex flex-col justify-center px-5 py-8 sm:px-12 lg:px-16 xl:px-24">
+      <div className="flex flex-col justify-center py-8  lg:px-16 xl:px-24">
         <div className="mx-auto w-full max-w-xl p-7">
           <Link to="/"><Logo /></Link>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -83,9 +83,9 @@ export function LoginPage() {
         <div className="relative flex h-full flex-col justify-center px-16 xl:px-24">
           <p className="eyebrow mb-3 text-canary">One connected workspace</p>
           <h2 className="max-w-md text-4xl font-extrabold leading-tight tracking-tight text-white">Run the whole shop with clarity and control.</h2>
-          <p className="mt-4 max-w-sm text-white/60">Inventory, POS, customers, cash flow and reports — connected so you enter each action just once.</p>
+          <p className="mt-4 max-w-sm text-white/60">Inventory, POS, customers, cash flow and reports - connected so you enter each action just once.</p>
           <div className="mt-8 space-y-3">
-            {['Enter a sale once — stock, cash and reports all update', 'Understand your money without the jargon', 'Register customers just by speaking'].map((t) => (
+            {['Enter a sale once - stock, cash and reports all update', 'Understand your money without the jargon', 'Register customers just by speaking'].map((t) => (
               <div key={t} className="flex items-center gap-3 text-sm text-white/80">
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-canary text-ink">✓</span> {t}
               </div>

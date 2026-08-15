@@ -175,25 +175,52 @@ function SalesReport({ range, onExport }: { range: ReturnType<typeof rangeFor>; 
   const seller = bestSeller(sales)
   const day = bestSalesDay(sales)
   const methods = sales.reduce<Record<string, number>>((m, s) => ({ ...m, [s.paymentMethod]: (m[s.paymentMethod] ?? 0) + s.total }), {})
+  const wholesaleRev = revenueOf(sales.filter((s) => s.tier === 'wholesale'))
+  const retailRev = +(rev - wholesaleRev).toFixed(2)
+  const wsShare = rev > 0 ? (wholesaleRev / rev) * 100 : 0
+  const wsOrders = sales.filter((s) => s.tier === 'wholesale').length
 
   return (
     <div className="space-y-4">
       <Summary>
-        You made {money(rev)} in sales {range.label.toLowerCase()}{delta !== undefined ? `, ${delta >= 0 ? 'higher' : 'lower'} than last month by ${Math.abs(delta).toFixed(0)}%` : ''}. {seller ? `${seller.name} was your best seller` : ''}{day ? `, and ${new Date(day.date).toLocaleDateString('en-GB', { weekday: 'long' })} was your highest-sales day.` : '.'}
+        You made {money(rev)} in sales {range.label.toLowerCase()}{delta !== undefined ? `, ${delta >= 0 ? 'higher' : 'lower'} than last month by ${Math.abs(delta).toFixed(0)}%` : ''}. {wholesaleRev > 0 ? `Wholesale made up ${wsShare.toFixed(0)}% of that. ` : ''}{seller ? `${seller.name} was your best seller` : ''}{day ? `, and ${new Date(day.date).toLocaleDateString('en-GB', { weekday: 'long' })} was your highest-sales day.` : '.'}
       </Summary>
       <Callouts items={[
         { label: 'Total sales', value: money(rev) },
         { label: 'Units sold', value: String(unitsSold(sales)) },
         { label: 'Transactions', value: String(sales.length) },
-        { label: 'vs last month', value: delta !== undefined ? `${delta >= 0 ? '+' : ''}${delta.toFixed(0)}%` : '—', tone: delta && delta < 0 ? 'watch' : 'good' },
+        { label: 'vs last month', value: delta !== undefined ? `${delta >= 0 ? '+' : ''}${delta.toFixed(0)}%` : '-', tone: delta && delta < 0 ? 'watch' : 'good' },
       ]} />
+
+      {/* Retail vs wholesale channel split */}
+      <Card className="p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-ink">Sales by channel</h3>
+          <span className="text-xs text-ink-soft">{wsOrders} wholesale order{wsOrders === 1 ? '' : 's'}</span>
+        </div>
+        <div className="mb-2 flex h-2.5 overflow-hidden rounded-full bg-canvas">
+          <div className="h-full bg-ink" style={{ width: `${100 - wsShare}%` }} />
+          <div className="h-full bg-canary" style={{ width: `${wsShare}%` }} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-canvas p-3 ring-1 ring-line">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-soft"><span className="h-2 w-2 rounded-full bg-ink" /> Retail · {(100 - wsShare).toFixed(0)}%</div>
+            <p className="mt-1 text-lg font-bold text-ink tnum">{money(retailRev)}</p>
+          </div>
+          <div className="rounded-xl bg-canary-50 p-3 ring-1 ring-canary-500/20">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-soft"><span className="h-2 w-2 rounded-full bg-canary" /> Wholesale · {wsShare.toFixed(0)}%</div>
+            <p className="mt-1 text-lg font-bold text-ink tnum">{money(wholesaleRev)}</p>
+          </div>
+        </div>
+      </Card>
+
       <div className="flex flex-wrap gap-2">
         {Object.entries(methods).map(([m, v]) => <Badge key={m} tone="neutral">{m.toUpperCase()}: {money(v)}</Badge>)}
       </div>
-      <ExportBar onClick={() => onExport(sales.map((s) => ({ receipt: s.receiptNo, date: fmtDate(s.createdAt), items: s.items.length, method: s.paymentMethod, paid: s.paid ? 'Yes' : 'Credit', total: s.total })), 'sales')} />
+      <ExportBar onClick={() => onExport(sales.map((s) => ({ receipt: s.receiptNo, date: fmtDate(s.createdAt), items: s.items.length, channel: s.tier ?? 'retail', method: s.paymentMethod, paid: s.paid ? 'Yes' : 'Credit', total: s.total })), 'sales')} />
       <DataTable
-        headers={['Receipt', 'Date', 'Items', 'Method', 'Total']}
-        rows={sales.slice().reverse().slice(0, 30).map((s) => [s.receiptNo, fmtDate(s.createdAt), `${s.items.length}`, <Badge tone={s.paid ? 'inflow' : 'warn'}>{s.paid ? s.paymentMethod.toUpperCase() : 'CREDIT'}</Badge>, <span className="font-semibold tnum">{money(s.total)}</span>])}
+        headers={['Receipt', 'Date', 'Channel', 'Method', 'Total']}
+        rows={sales.slice().reverse().slice(0, 30).map((s) => [s.receiptNo, fmtDate(s.createdAt), <Badge tone={s.tier === 'wholesale' ? 'canary' : 'neutral'}>{(s.tier ?? 'retail').toUpperCase()}</Badge>, <Badge tone={s.paid ? 'inflow' : 'warn'}>{s.paid ? s.paymentMethod.toUpperCase() : 'CREDIT'}</Badge>, <span className="font-semibold tnum">{money(s.total)}</span>])}
       />
     </div>
   )
@@ -206,7 +233,7 @@ function ProfitReport({ range }: { range: ReturnType<typeof rangeFor> }) {
   return (
     <div className="space-y-4">
       <Summary>
-        On {money(p.revenue)} of sales, goods cost {money(p.cogs)} and expenses were {money(p.expenses)}, leaving a net profit of {money(p.netProfit)} — a {p.margin}% margin.
+        On {money(p.revenue)} of sales, goods cost {money(p.cogs)} and expenses were {money(p.expenses)}, leaving a net profit of {money(p.netProfit)} - a {p.margin}% margin.
       </Summary>
       <Callouts items={[
         { label: 'Revenue', value: money(p.revenue) },
@@ -276,8 +303,8 @@ function ExpensesReport({ range, onExport }: { range: ReturnType<typeof rangeFor
       <Callouts items={[
         { label: 'Total expenses', value: money(total), tone: 'watch' },
         { label: 'Categories', value: String(top.length) },
-        { label: 'Highest category', value: top[0] ? top[0][0] : '—' },
-        { label: 'Largest expense', value: largest ? money(largest.amount) : '—' },
+        { label: 'Highest category', value: top[0] ? top[0][0] : '-' },
+        { label: 'Largest expense', value: largest ? money(largest.amount) : '-' },
       ]} />
       <div className="space-y-2">
         {top.map(([cat, amt]) => (
@@ -330,7 +357,7 @@ function OutstandingReport({ onExport }: { onExport: (r: Record<string, unknown>
         { label: 'Total outstanding', value: money(total), tone: 'watch' },
         { label: 'Customers owing', value: String(owing.length) },
         { label: 'Payments received', value: money(received), tone: 'good' },
-        { label: 'Largest balance', value: owing[0] ? money(owing[0].outstanding) : '—' },
+        { label: 'Largest balance', value: owing[0] ? money(owing[0].outstanding) : '-' },
       ]} />
       <ExportBar onClick={() => onExport(owing.map((c) => ({ name: c.name, phone: c.phone, outstanding: c.outstanding })), 'outstanding')} />
       <DataTable

@@ -1,7 +1,7 @@
 import { useStore } from './useStore'
 
 // Role-based access (spec §13). In production these checks MUST also be enforced
-// server-side (spec §13 security principle) — here they gate the demo UI.
+// server-side (spec §13 security principle) - here they gate the demo UI.
 export type Capability =
   | 'financials' // dashboard financials, profit, margin
   | 'costPrice' // cost price / inventory value

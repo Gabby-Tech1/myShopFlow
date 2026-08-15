@@ -44,7 +44,7 @@
   }
 
   ::selection {
-    background: rgba(244, 180, 0, 0.24);
+    background: rgba(255, 122, 26, 0.20);
   }
 
   ::-webkit-scrollbar {
@@ -68,7 +68,7 @@
   .card {
     @apply rounded-2xl bg-paper ring-1 ring-black/[0.06] shadow-card;
   }
-  /* Flat inner surface for nested content — border only, no elevation. */
+  /* Flat inner surface for nested content - border only, no elevation. */
   .card-flat {
     @apply rounded-xl bg-paper ring-1 ring-hair;
   }
@@ -112,7 +112,7 @@
     @apply block text-[13px] font-semibold text-ink mb-1.5;
   }
 
-  /* Eyebrow / section kicker — small, spaced, uppercase. */
+  /* Eyebrow / section kicker - small, spaced, uppercase. */
   .eyebrow {
     @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint;
   }

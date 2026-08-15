@@ -40,8 +40,29 @@ export function stockStatus(p: Product): 'out' | 'low' | 'ok' {
   return 'ok'
 }
 
+/** Units of a product at a specific location. */
+export function stockAt(p: Product, locId: string): number {
+  return p.stockByLocation ? p.stockByLocation[locId] ?? 0 : p.stock
+}
+
+/** Stock status at a location. The threshold is shared, evenly split by location count. */
+export function stockStatusAt(p: Product, locId: string, locationCount = 1): 'out' | 'low' | 'ok' {
+  const qty = stockAt(p, locId)
+  const perLocThreshold = Math.max(1, Math.ceil(p.threshold / Math.max(1, locationCount)))
+  if (qty <= 0) return 'out'
+  if (qty <= perLocThreshold) return 'low'
+  return 'ok'
+}
+
 export function lowStock(products: Product[]): Product[] {
   return products.filter((p) => stockStatus(p) !== 'ok').sort((a, b) => a.stock - b.stock)
+}
+
+/** Products low or out at a given location. */
+export function lowStockAt(products: Product[], locId: string, locationCount = 1): Product[] {
+  return products
+    .filter((p) => stockStatusAt(p, locId, locationCount) !== 'ok')
+    .sort((a, b) => stockAt(a, locId) - stockAt(b, locId))
 }
 
 export function totalOutstanding(customers: Customer[]): number {

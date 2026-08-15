@@ -19,6 +19,8 @@ const MODULES: { value: ActivityModule | 'all'; label: string }[] = [
   { value: 'cashflow', label: 'Cash Flow' },
   { value: 'expenses', label: 'Expenses' },
   { value: 'staff', label: 'Staff' },
+  { value: 'suppliers', label: 'Suppliers' },
+  { value: 'settings', label: 'Settings' },
 ]
 
 function moduleIcon(m: string) {
@@ -86,8 +88,8 @@ export function ActivityPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Audit trail" title="Every action, clearly accounted for" description="Your business's operational memory—who did what, where it happened and exactly when." />
-      <p className="text-sm text-ink-soft">Your business’s operational memory — who did what, and exactly when.</p>
+      <PageHero eyebrow="Admin oversight" title="Audit logs" description="Track every recorded action across sales, inventory, customers, cash flow, staff and suppliers." />
+      <p className="text-sm text-ink-soft">A clear, time-stamped record of what each staff member has done in the system.</p>
 
       <div className="rounded-2xl bg-white p-3 ring-1 ring-black/[0.06] shadow-card">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_180px_180px_190px_auto]">

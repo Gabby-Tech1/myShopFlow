@@ -11,6 +11,7 @@ import { useSpeech } from '@/components/voice/useSpeech'
 import { extractCustomer, MOCK_TRANSCRIPTS } from '@/components/voice/extract'
 import { normalizePhone } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import type { PriceTier } from '@/types'
 
 type Mode = 'manual' | 'voice'
 type VoiceStage = 'idle' | 'listening' | 'review'
@@ -27,6 +28,8 @@ export function RegisterCustomerModal() {
   const [mode, setMode] = useState<Mode>('manual')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [type, setType] = useState<PriceTier>('retail')
+  const [company, setCompany] = useState('')
   const [stage, setStage] = useState<VoiceStage>('idle')
   const [method, setMethod] = useState<'manual' | 'voice'>('manual')
 
@@ -36,6 +39,8 @@ export function RegisterCustomerModal() {
   const reset = () => {
     setName('')
     setPhone('')
+    setType('retail')
+    setCompany('')
     setStage('idle')
     setMethod('manual')
     speech.reset()
@@ -99,10 +104,13 @@ export function RegisterCustomerModal() {
       toast.info('Customer already exists', 'A customer with this phone number is already registered.')
       return
     }
-    registerCustomer(name.trim(), savedPhone, method)
+    registerCustomer(name.trim(), savedPhone, method, undefined, {
+      type,
+      company: type === 'wholesale' ? company.trim() || undefined : undefined,
+    })
     toast.success(
       method === 'voice' ? 'Customer registered by voice' : 'Customer registered',
-      `${name.trim()} was added to your customers.`,
+      `${name.trim()} added as a ${type} customer.`,
     )
     close()
   }
@@ -139,6 +147,28 @@ export function RegisterCustomerModal() {
           }}
           className="w-full [&>button]:flex-1"
         />}
+
+        {/* Customer type — wholesale accounts get bulk pricing at the POS. */}
+        <div>
+          <label className="label">Customer type</label>
+          <Segmented
+            options={[
+              { value: 'retail', label: 'Retail' },
+              { value: 'wholesale', label: 'Wholesale' },
+            ]}
+            value={type}
+            onChange={(v) => setType(v as PriceTier)}
+            className="w-full [&>button]:flex-1"
+          />
+          {type === 'wholesale' && (
+            <input
+              className="input mt-2.5"
+              placeholder="Business name (optional)"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+            />
+          )}
+        </div>
 
         {mode === 'manual' && (
           <div className="space-y-4">
@@ -212,11 +242,11 @@ export function RegisterCustomerModal() {
                 )}
                 <div>
                   <label className="label" htmlFor="v-name">Name</label>
-                  <input id="v-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name not detected — type it" />
+                  <input id="v-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name not detected - type it" />
                 </div>
                 <div>
                   <label className="label" htmlFor="v-phone">Phone number</label>
-                  <input id="v-phone" className="input tnum" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone not detected — type it" />
+                  <input id="v-phone" className="input tnum" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone not detected - type it" />
                 </div>
                 <div className="flex items-center gap-2 text-xs text-ink-soft">
                   <Badge tone="canary" dot>Registration method: Voice</Badge>

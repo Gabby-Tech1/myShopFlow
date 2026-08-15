@@ -40,7 +40,7 @@ export function Badge({
   )
 }
 
-/** Stock status pill — uses icon+label+colour, never colour alone (spec §8). */
+/** Stock status pill - uses icon+label+colour, never colour alone (spec §8). */
 export function StockPill({ product }: { product: Product }) {
   const status = stockStatus(product)
   if (status === 'out') return <Badge tone="danger" dot>Out of stock</Badge>

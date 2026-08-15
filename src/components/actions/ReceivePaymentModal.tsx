@@ -68,7 +68,7 @@ export function ReceivePaymentModal() {
             <option value="" disabled>Select a customer…</option>
             {customers.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name} {c.outstanding > 0 ? `— owes ${money(c.outstanding)}` : '— no balance'}
+                {c.name} {c.outstanding > 0 ? `- owes ${money(c.outstanding)}` : '- no balance'}
               </option>
             ))}
           </select>

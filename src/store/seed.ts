@@ -4,14 +4,19 @@ import type {
   Customer,
   CustomerPayment,
   Expense,
+  Location,
+  PriceTier,
   Product,
   Sale,
+  SaleItem,
   StockPurchase,
   Supplier,
+  UnitOfMeasure,
   User,
 } from '@/types'
 import type { CashEvent } from './engine'
 import { receiptNo, uid } from '@/lib/utils'
+import { priceFor, tierApplied } from '@/lib/pricing'
 
 // Deterministic RNG so the demo looks identical on every fresh seed.
 function makeRng(seed: number) {
@@ -39,6 +44,7 @@ export interface SeedState {
   currentUserId: string
   categories: Category[]
   suppliers: Supplier[]
+  locations: Location[]
   products: Product[]
   customers: Customer[]
   sales: Sale[]
@@ -72,7 +78,19 @@ export function buildSeed(): SeedState {
     { id: 's_tech', name: 'Circle Tech Imports', phone: '055 214 8890' },
   ]
 
+  const locations: Location[] = [
+    { id: 'loc_main', name: 'Main Shop', kind: 'shop', address: 'Circle Market, Accra' },
+    { id: 'loc_wh', name: 'Central Warehouse', kind: 'warehouse', address: 'Spintex Road, Accra' },
+    { id: 'loc_branch', name: 'Madina Branch', kind: 'shop', address: 'Madina Market, Accra' },
+  ]
+
   let productImageIndex = 0
+  interface POpts {
+    unit?: UnitOfMeasure
+    pack?: number
+    wholesale?: number
+    wholesaleMin?: number
+  }
   const P = (
     name: string,
     categoryId: string,
@@ -82,6 +100,7 @@ export function buildSeed(): SeedState {
     threshold: number,
     supplierId: string,
     sku: string,
+    opts: POpts = {},
   ): Product => ({
     id: uid('p'),
     name,
@@ -89,6 +108,10 @@ export function buildSeed(): SeedState {
     categoryId,
     costPrice: cost,
     salePrice: sale,
+    wholesalePrice: opts.wholesale,
+    wholesaleMinQty: opts.wholesaleMin,
+    unit: opts.unit ?? 'each',
+    packSize: opts.pack,
     stock,
     threshold,
     currency: 'GHS',
@@ -98,31 +121,57 @@ export function buildSeed(): SeedState {
   })
 
   const products: Product[] = [
-    P('Coca-Cola 350ml', 'c_bev', 3.5, 6, 120, 24, 's_accra', 'BEV-COKE-350'),
-    P('Voltic Water 500ml', 'c_bev', 1.2, 2.5, 200, 40, 's_accra', 'BEV-VOLT-500'),
-    P('Malta Guinness', 'c_bev', 5, 8, 8, 18, 's_accra', 'BEV-MALT-330'),
-    P('Milo Refill 400g', 'c_prov', 28, 42, 34, 12, 's_makola', 'PRV-MILO-400'),
-    P('Ideal Milk Tin', 'c_prov', 6.5, 10, 90, 24, 's_makola', 'PRV-IDEAL-TIN'),
-    P('Indomie Noodles', 'c_prov', 2, 3.5, 240, 48, 's_makola', 'PRV-INDO-70'),
-    P('Perfumed Rice 5kg', 'c_prov', 45, 62, 6, 10, 's_makola', 'PRV-RICE-5KG'),
-    P('Cotton T-Shirt', 'c_cloth', 25, 55, 40, 10, 's_accra', 'CLO-TSHIRT'),
-    P('Ladies Sandals', 'c_cloth', 40, 85, 18, 8, 's_accra', 'CLO-SANDAL'),
-    P('USB-C Cable', 'c_acc', 8, 20, 60, 15, 's_tech', 'ACC-USBC'),
-    P('Power Bank 10000mAh', 'c_acc', 60, 130, 9, 6, 's_tech', 'ACC-PWRBNK'),
-    P('Phone Case', 'c_acc', 6, 18, 75, 20, 's_tech', 'ACC-CASE'),
-    P('Bluetooth Speaker', 'c_elec', 90, 180, 7, 5, 's_tech', 'ELE-BTSPK'),
-    P('Detergent 1kg', 'c_home', 14, 24, 55, 15, 's_makola', 'HOM-DETRG'),
-    P('Toilet Roll 10pk', 'c_home', 18, 30, 48, 12, 's_makola', 'HOM-TROLL'),
+    P('Coca-Cola 350ml', 'c_bev', 3.5, 6, 120, 24, 's_accra', 'BEV-COKE-350', { pack: 24, wholesale: 5, wholesaleMin: 24 }),
+    P('Voltic Water 500ml', 'c_bev', 1.2, 2.5, 200, 40, 's_accra', 'BEV-VOLT-500', { pack: 24, wholesale: 2, wholesaleMin: 24 }),
+    P('Malta Guinness', 'c_bev', 5, 8, 8, 18, 's_accra', 'BEV-MALT-330', { pack: 24, wholesale: 7, wholesaleMin: 12 }),
+    P('Milo Refill 400g', 'c_prov', 28, 42, 34, 12, 's_makola', 'PRV-MILO-400', { pack: 12, wholesale: 38, wholesaleMin: 6 }),
+    P('Ideal Milk Tin', 'c_prov', 6.5, 10, 90, 24, 's_makola', 'PRV-IDEAL-TIN', { pack: 48, wholesale: 8.5, wholesaleMin: 24 }),
+    P('Indomie Noodles', 'c_prov', 2, 3.5, 240, 48, 's_makola', 'PRV-INDO-70', { pack: 40, wholesale: 3, wholesaleMin: 40 }),
+    P('Perfumed Rice 5kg', 'c_prov', 45, 62, 6, 10, 's_makola', 'PRV-RICE-5KG', { wholesale: 56, wholesaleMin: 5 }),
+    P('Cotton T-Shirt', 'c_cloth', 25, 55, 40, 10, 's_accra', 'CLO-TSHIRT', { wholesale: 45, wholesaleMin: 10 }),
+    P('Ladies Sandals', 'c_cloth', 40, 85, 18, 8, 's_accra', 'CLO-SANDAL', { unit: 'pair', wholesale: 72, wholesaleMin: 6 }),
+    P('USB-C Cable', 'c_acc', 8, 20, 60, 15, 's_tech', 'ACC-USBC', { wholesale: 15, wholesaleMin: 20 }),
+    P('Power Bank 10000mAh', 'c_acc', 60, 130, 9, 6, 's_tech', 'ACC-PWRBNK', { wholesale: 110, wholesaleMin: 5 }),
+    P('Phone Case', 'c_acc', 6, 18, 75, 20, 's_tech', 'ACC-CASE', { wholesale: 13, wholesaleMin: 20 }),
+    P('Bluetooth Speaker', 'c_elec', 90, 180, 7, 5, 's_tech', 'ELE-BTSPK', { wholesale: 155, wholesaleMin: 3 }),
+    P('Detergent 1kg', 'c_home', 14, 24, 55, 15, 's_makola', 'HOM-DETRG', { wholesale: 20, wholesaleMin: 12 }),
+    P('Toilet Roll 10pk', 'c_home', 18, 30, 48, 12, 's_makola', 'HOM-TROLL', { unit: 'pack', wholesale: 26, wholesaleMin: 12 }),
+    P('Fanta 350ml', 'c_bev', 3.5, 6, 96, 24, 's_accra', 'BEV-FANTA-350', { pack: 24, wholesale: 5, wholesaleMin: 24 }),
+    P('Bel-Aqua Water 750ml', 'c_bev', 1.5, 3, 150, 30, 's_accra', 'BEV-BELA-750', { pack: 12, wholesale: 2.5, wholesaleMin: 24 }),
+    P('Kalyppo Juice', 'c_bev', 2.5, 4.5, 110, 24, 's_accra', 'BEV-KAL-250', { pack: 24, wholesale: 3.8, wholesaleMin: 24 }),
+    P('Tinned Tomatoes', 'c_prov', 3, 5, 130, 24, 's_makola', 'PRV-TOM-TIN', { pack: 24, wholesale: 4.2, wholesaleMin: 24 }),
+    P('Gari 1kg', 'c_prov', 6, 10, 80, 15, 's_makola', 'PRV-GARI-1KG', { unit: 'kg', wholesale: 8.5, wholesaleMin: 10 }),
+    P('Sardines Tin', 'c_prov', 4, 7, 100, 20, 's_makola', 'PRV-SARD-TIN', { pack: 50, wholesale: 6, wholesaleMin: 24 }),
+    P('Tea Bags 25s', 'c_prov', 5, 9, 70, 15, 's_makola', 'PRV-TEA-25', { unit: 'pack', wholesale: 7.5, wholesaleMin: 12 }),
+    P("Men's Polo Shirt", 'c_cloth', 35, 70, 30, 8, 's_accra', 'CLO-POLO', { wholesale: 58, wholesaleMin: 6 }),
+    P('Kids T-Shirt', 'c_cloth', 18, 40, 45, 10, 's_accra', 'CLO-KIDTEE', { wholesale: 33, wholesaleMin: 10 }),
+    P('Wired Earphones', 'c_acc', 10, 25, 65, 15, 's_tech', 'ACC-EARPH', { wholesale: 19, wholesaleMin: 20 }),
+    P('Memory Card 32GB', 'c_acc', 28, 55, 40, 8, 's_tech', 'ACC-SD32', { wholesale: 46, wholesaleMin: 10 }),
+    P('LED Bulb 12W', 'c_elec', 9, 18, 90, 20, 's_tech', 'ELE-LED12', { pack: 10, wholesale: 14, wholesaleMin: 20 }),
+    P('Rechargeable Fan', 'c_elec', 110, 200, 12, 4, 's_tech', 'ELE-RFAN', { wholesale: 175, wholesaleMin: 3 }),
+    P('Bar Soap 3pk', 'c_home', 8, 14, 120, 24, 's_makola', 'HOM-SOAP3', { unit: 'pack', wholesale: 11.5, wholesaleMin: 24 }),
+    P('Air Freshener', 'c_home', 12, 22, 60, 12, 's_makola', 'HOM-AIRFR', { wholesale: 18, wholesaleMin: 12 }),
+    P('Broom', 'c_home', 10, 20, 35, 8, 's_makola', 'HOM-BROOM', { wholesale: 16, wholesaleMin: 10 }),
   ]
 
+  // Distribute each product's stock across the shop, warehouse and branch so the
+  // per-location totals always sum back to `stock` (spec §15 integrity).
+  products.forEach((p) => {
+    const wh = Math.round(p.stock * 0.45)
+    const branch = Math.round(p.stock * 0.2)
+    const main = p.stock - wh - branch
+    p.stockByLocation = { loc_main: main, loc_wh: wh, loc_branch: branch }
+  })
+
   const customers: Customer[] = [
-    { id: 'cu_kwame', name: 'Kwame Mensah', phone: '024 118 4420', outstanding: 0, registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(110), lastVisit: iso(2) },
-    { id: 'cu_abena', name: 'Abena Boateng', phone: '020 553 7781', outstanding: 0, registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(95), lastVisit: iso(4) },
-    { id: 'cu_yaw', name: 'Yaw Darko', phone: '055 209 6634', outstanding: 0, registrationMethod: 'voice', createdBy: 'u_kofi', createdAt: iso(20), lastVisit: iso(1), notes: 'Registered by voice at the counter.' },
-    { id: 'cu_efua', name: 'Efua Sarpong', phone: '027 884 1290', outstanding: 0, registrationMethod: 'manual', createdBy: 'u_akos', createdAt: iso(80), lastVisit: iso(9) },
-    { id: 'cu_kojo', name: 'Kojo Antwi', phone: '024 771 3345', outstanding: 0, registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(70), lastVisit: iso(6) },
-    { id: 'cu_adwoa', name: 'Adwoa Agyeman', phone: '059 442 1176', outstanding: 0, registrationMethod: 'voice', createdBy: 'u_akos', createdAt: iso(15), lastVisit: iso(3) },
-    { id: 'cu_ibrahim', name: 'Ibrahim Mohammed', phone: '026 330 5528', outstanding: 0, registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(60), lastVisit: iso(12) },
+    { id: 'cu_kwame', name: 'Kwame Mensah', phone: '024 118 4420', outstanding: 0, type: 'retail', registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(110), lastVisit: iso(2) },
+    { id: 'cu_abena', name: 'Abena Boateng', phone: '020 553 7781', outstanding: 0, type: 'retail', registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(95), lastVisit: iso(4) },
+    { id: 'cu_yaw', name: 'Yaw Darko', phone: '055 209 6634', outstanding: 0, type: 'retail', registrationMethod: 'voice', createdBy: 'u_kofi', createdAt: iso(20), lastVisit: iso(1), notes: 'Registered by voice at the counter.' },
+    { id: 'cu_efua', name: 'Efua Sarpong', phone: '027 884 1290', outstanding: 0, type: 'retail', registrationMethod: 'manual', createdBy: 'u_akos', createdAt: iso(80), lastVisit: iso(9) },
+    { id: 'cu_kojo', name: 'Kojo Antwi', phone: '024 771 3345', outstanding: 0, type: 'wholesale', company: 'Antwi Provisions', registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(70), lastVisit: iso(6) },
+    { id: 'cu_adwoa', name: 'Adwoa Agyeman', phone: '059 442 1176', outstanding: 0, type: 'retail', registrationMethod: 'voice', createdBy: 'u_akos', createdAt: iso(15), lastVisit: iso(3) },
+    { id: 'cu_ibrahim', name: 'Ibrahim Mohammed', phone: '026 330 5528', outstanding: 0, type: 'wholesale', company: 'Mohammed Trading Co.', registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(60), lastVisit: iso(12) },
+    { id: 'cu_frimpong', name: 'Grace Frimpong', phone: '020 611 4408', outstanding: 0, type: 'wholesale', company: 'Frimpong Distribution', registrationMethod: 'manual', createdBy: 'u_ama', createdAt: iso(50), lastVisit: iso(5) },
   ]
 
   const sales: Sale[] = []
@@ -139,21 +188,29 @@ export function buildSeed(): SeedState {
     const isSun = dow === 0
     const count = isSat ? between(4, 7) : isSun ? between(1, 2) : between(2, 4)
     for (let n = 0; n < count; n++) {
+      // Decide the customer first — wholesale accounts buy in bulk at bulk prices.
+      const customer = rng() < 0.22 ? pick(customers) : undefined
+      const tier: PriceTier = customer?.type === 'wholesale' ? 'wholesale' : 'retail'
       const itemCount = between(1, 3)
-      const items = []
+      const items: SaleItem[] = []
       let subtotal = 0
       for (let i = 0; i < itemCount; i++) {
         const p = pick(products)
-        const qty = between(1, 3)
-        const lineTotal = +(p.salePrice * qty).toFixed(2)
+        const min = p.wholesaleMinQty ?? 6
+        const qty = tier === 'wholesale' ? between(min, min + 12) : between(1, 3)
+        const unitPrice = priceFor(p, tier, qty)
+        const lineTotal = +(unitPrice * qty).toFixed(2)
         subtotal += lineTotal
-        items.push({ productId: p.id, name: p.name, qty, unitPrice: p.salePrice, unitCost: p.costPrice, lineTotal })
+        items.push({ productId: p.id, name: p.name, qty, unitPrice, unitCost: p.costPrice, lineTotal, unit: p.unit, tier: tierApplied(p, tier, qty) })
       }
       subtotal = +subtotal.toFixed(2)
       const roll = rng()
-      const method = roll < 0.46 ? 'cash' : roll < 0.82 ? 'momo' : roll < 0.92 ? 'card' : 'credit'
+      let method =
+        tier === 'wholesale'
+          ? roll < 0.4 ? 'momo' : roll < 0.7 ? 'credit' : 'cash'
+          : roll < 0.46 ? 'cash' : roll < 0.82 ? 'momo' : roll < 0.92 ? 'card' : 'credit'
+      if (method === 'credit' && !customer) method = 'cash' // walk-ins can't run a tab
       const isCredit = method === 'credit'
-      const customer = isCredit || rng() < 0.25 ? pick(customers) : undefined
       const userId = pick(staff)
       const sale: Sale = {
         id: uid('sale'),
@@ -162,6 +219,7 @@ export function buildSeed(): SeedState {
         subtotal,
         total: subtotal,
         paymentMethod: method as Sale['paymentMethod'],
+        tier,
         paid: !isCredit,
         amountPaid: isCredit ? 0 : subtotal,
         customerId: customer?.id,
@@ -173,12 +231,12 @@ export function buildSeed(): SeedState {
     }
   }
 
-  // Customers pay down most of their credit — a real shop chases balances, so
+  // Customers pay down most of their credit - a real shop chases balances, so
   // outstanding stays modest (a few thousand cedis, in line with the spec examples).
   for (const c of customers) {
     const owed = outMap[c.id] ?? 0
     if (owed < 40) continue
-    // Most customers clear 60–95% of what they owe, some in two instalments.
+    // Most customers clear 60-95% of what they owe, some in two instalments.
     const instalments = owed > 400 && rng() < 0.6 ? 2 : 1
     const target = owed * (0.4 + rng() * 0.35)
     let paidSoFar = 0
@@ -292,6 +350,7 @@ export function buildSeed(): SeedState {
     currentUserId: 'u_ama',
     categories,
     suppliers,
+    locations,
     products,
     customers,
     sales,

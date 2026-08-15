@@ -1,7 +1,7 @@
 import { normalizePhone } from '@/lib/format'
 
 // Structured extraction of Name + Phone from a free-form transcript (spec §7).
-// A lightweight, explainable heuristic — the production path would send the
+// A lightweight, explainable heuristic - the production path would send the
 // transcript to a backend NLP/AI step, but the confirmation UX is identical.
 
 const NUMBER_WORDS: Record<string, string> = {
@@ -64,7 +64,7 @@ export function extractCustomer(transcript: string): Extracted {
   return { name, phone }
 }
 
-// Scripted transcripts for the mock fallback (spec §16 — mock when API not connected).
+// Scripted transcripts for the mock fallback (spec §16 - mock when API not connected).
 export const MOCK_TRANSCRIPTS = [
   'My name is Ama Serwaa and my number is 024 665 1180',
   'This is Kwesi Appiah, phone zero two zero five five one four four seven eight',

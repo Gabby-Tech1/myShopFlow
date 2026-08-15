@@ -110,7 +110,7 @@ function CustomerProfile({ customer, onClose }: { customer: Customer | null; onC
         <div className="grid grid-cols-3 gap-3">
           <MiniStat label="Outstanding" value={<Money value={customer.outstanding} className={customer.outstanding > 0 ? 'text-brick-600' : 'text-inflow'} />} />
           <MiniStat label="Total spent" value={<Money value={totalSpent} />} />
-          <MiniStat label="Last visit" value={<span className="text-sm">{customer.lastVisit ? timeAgo(customer.lastVisit) : '—'}</span>} />
+          <MiniStat label="Last visit" value={<span className="text-sm">{customer.lastVisit ? timeAgo(customer.lastVisit) : '-'}</span>} />
         </div>
 
         {customer.notes && <p className="rounded-xl bg-canvas px-3.5 py-2.5 text-sm text-ink-soft">{customer.notes}</p>}

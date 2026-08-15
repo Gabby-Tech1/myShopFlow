@@ -12,9 +12,11 @@ import { PageHero } from '@/components/ui/PageHero'
 import { ProductImage } from '@/components/ui/ProductImage'
 import { ReceiptModal } from '@/components/ui/Receipt'
 import { money } from '@/lib/format'
+import { priceFor, tierApplied, unitAbbr, hasWholesale } from '@/lib/pricing'
+import { Segmented } from '@/components/ui/Segmented'
 import { cn } from '@/lib/utils'
-import type { PaymentMethod, Sale, SaleItem } from '@/types'
-import { stockStatus } from '@/store/selectors'
+import type { PaymentMethod, PriceTier, Sale, SaleItem } from '@/types'
+import { stockAt, stockStatusAt } from '@/store/selectors'
 
 const METHODS: { value: PaymentMethod; label: string; icon: string }[] = [
   { value: 'cash', label: 'Cash', icon: 'Banknote' },
@@ -28,15 +30,26 @@ export function PosPage() {
   const categories = useStore((s) => s.categories)
   const customers = useStore((s) => s.customers)
   const recordSale = useStore((s) => s.recordSale)
+  const locations = useStore((s) => s.locations)
+  const activeLocationId = useStore((s) => s.activeLocationId)
   const openModal = useUi((s) => s.openModal)
+  const locCount = locations.length
 
   const [query, setQuery] = useState('')
   const [cat, setCat] = useState<string>('all')
   const [cart, setCart] = useState<CartLine[]>([])
   const [method, setMethod] = useState<PaymentMethod>('cash')
+  const [tier, setTier] = useState<PriceTier>('retail')
   const [customerId, setCustomerId] = useState('')
   const [cartOpenMobile, setCartOpenMobile] = useState(false)
   const [receipt, setReceipt] = useState<Sale | null>(null)
+
+  // Selecting a wholesale account switches pricing to wholesale automatically.
+  const selectCustomer = (id: string) => {
+    setCustomerId(id)
+    const c = customers.find((x) => x.id === id)
+    if (c) setTier(c.type)
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -49,12 +62,13 @@ export function PosPage() {
 
   const add = (id: string) => {
     const product = products.find((p) => p.id === id)!
-    if (product.stock <= 0) return
+    const avail = stockAt(product, activeLocationId)
+    if (avail <= 0) return
     setCart((c) => {
       const existing = c.find((l) => l.product.id === id)
       if (existing) {
-        if (existing.qty >= product.stock) {
-          toast.info('Reached stock limit', `Only ${product.stock} in stock.`)
+        if (existing.qty >= avail) {
+          toast.info('Reached stock limit', `Only ${avail} at this location.`)
           return c
         }
         return c.map((l) => (l.product.id === id ? { ...l, qty: l.qty + 1 } : l))
@@ -65,7 +79,7 @@ export function PosPage() {
   const dec = (id: string) => setCart((c) => c.flatMap((l) => (l.product.id === id ? (l.qty > 1 ? [{ ...l, qty: l.qty - 1 }] : []) : [l])))
   const removeLine = (id: string) => setCart((c) => c.filter((l) => l.product.id !== id))
 
-  const total = cart.reduce((s, l) => s + l.product.salePrice * l.qty, 0)
+  const total = cart.reduce((s, l) => s + priceFor(l.product, tier, l.qty) * l.qty, 0)
   const count = cart.reduce((s, l) => s + l.qty, 0)
 
   const checkout = () => {
@@ -74,18 +88,23 @@ export function PosPage() {
       toast.error('Choose a customer', 'Credit sales must be linked to a customer.')
       return
     }
-    const items: SaleItem[] = cart.map((l) => ({
-      productId: l.product.id,
-      name: l.product.name,
-      qty: l.qty,
-      unitPrice: l.product.salePrice,
-      unitCost: l.product.costPrice,
-      lineTotal: +(l.product.salePrice * l.qty).toFixed(2),
-    }))
-    const sale = recordSale({ items, paymentMethod: method, customerId: customerId || undefined })
+    const items: SaleItem[] = cart.map((l) => {
+      const unitPrice = priceFor(l.product, tier, l.qty)
+      return {
+        productId: l.product.id,
+        name: l.product.name,
+        qty: l.qty,
+        unitPrice,
+        unitCost: l.product.costPrice,
+        lineTotal: +(unitPrice * l.qty).toFixed(2),
+        unit: l.product.unit,
+        tier: tierApplied(l.product, tier, l.qty),
+      }
+    })
+    const sale = recordSale({ items, paymentMethod: method, customerId: customerId || undefined, tier })
     setReceipt(sale)
     toast.success(
-      method === 'credit' ? 'Credit sale recorded' : 'Sale completed',
+      method === 'credit' ? 'Credit sale recorded' : `${tier === 'wholesale' ? 'Wholesale sale' : 'Sale'} completed`,
       method === 'credit'
         ? `${money(sale.total)} added to customer's balance. No cash added yet.`
         : `${money(sale.total)} received · stock and cash updated.`,
@@ -93,6 +112,7 @@ export function PosPage() {
     setCart([])
     setCustomerId('')
     setMethod('cash')
+    setTier('retail')
     setCartOpenMobile(false)
   }
 
@@ -125,7 +145,8 @@ export function PosPage() {
         ) : (
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
             {filtered.map((p) => {
-              const status = stockStatus(p)
+              const status = stockStatusAt(p, activeLocationId, locCount)
+              const locQty = stockAt(p, activeLocationId)
               const out = status === 'out'
               const qty = inCart(p.id)
               return (
@@ -144,13 +165,19 @@ export function PosPage() {
                     <span className="flex items-center gap-1 text-[11px] font-semibold">
                       <span className={cn('h-1.5 w-1.5 rounded-full', status === 'ok' ? 'bg-inflow' : status === 'low' ? 'bg-warn' : 'bg-danger')} />
                       <span className={cn(status === 'ok' ? 'text-ink-faint' : status === 'low' ? 'text-warn' : 'text-danger')}>
-                        {status === 'ok' ? `${p.stock}` : status === 'low' ? `${p.stock} left` : 'Out'}
+                        {status === 'ok' ? `${locQty}` : status === 'low' ? `${locQty} left` : 'Out'}
                       </span>
                     </span>
                   </div>
                   <p className="mt-3 line-clamp-2 text-[13.5px] font-semibold leading-snug text-ink">{p.name}</p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[15px] font-extrabold tracking-tightest text-ink tnum">{money(p.salePrice)}</span>
+                  <div className="mt-2 flex items-end justify-between">
+                    <div className="min-w-0">
+                      <span className="text-[15px] font-extrabold tracking-tightest text-ink tnum">{money(priceFor(p, tier, tier === 'wholesale' ? p.wholesaleMinQty ?? 1 : 1))}</span>
+                      <span className="ml-0.5 text-[11px] font-medium text-ink-faint">/{unitAbbr(p.unit)}</span>
+                      {tier === 'wholesale' && hasWholesale(p) && (
+                        <span className="block text-[10px] font-semibold text-canary-700">wholesale · min {p.wholesaleMinQty ?? 1}</span>
+                      )}
+                    </div>
                     {qty > 0 ? (
                       <span className="grid h-6 min-w-[24px] place-items-center rounded-full bg-canary px-1.5 text-[12px] font-bold text-ink">{qty}</span>
                     ) : (
@@ -166,7 +193,7 @@ export function PosPage() {
         )}
       </div>
 
-      {/* Cart — desktop */}
+      {/* Cart - desktop */}
       <div className="hidden self-start lg:sticky lg:top-4 lg:block">
         <div>
           <CartPanel
@@ -177,7 +204,9 @@ export function PosPage() {
             setMethod={setMethod}
             customers={customers}
             customerId={customerId}
-            setCustomerId={setCustomerId}
+            setCustomerId={selectCustomer}
+            tier={tier}
+            setTier={setTier}
             onInc={add}
             onDec={dec}
             onRemove={removeLine}
@@ -187,7 +216,7 @@ export function PosPage() {
         </div>
       </div>
 
-      {/* Cart — mobile floating bar + sheet */}
+      {/* Cart - mobile floating bar + sheet */}
       {count > 0 && (
         <button
           onClick={() => setCartOpenMobile(true)}
@@ -213,7 +242,9 @@ export function PosPage() {
               setMethod={setMethod}
               customers={customers}
               customerId={customerId}
-              setCustomerId={setCustomerId}
+              setCustomerId={selectCustomer}
+              tier={tier}
+              setTier={setTier}
               onInc={add}
               onDec={dec}
               onRemove={removeLine}
@@ -250,6 +281,8 @@ interface CartPanelProps {
   count: number
   method: PaymentMethod
   setMethod: (m: PaymentMethod) => void
+  tier: PriceTier
+  setTier: (t: PriceTier) => void
   customers: ReturnType<typeof useStore.getState>['customers']
   customerId: string
   setCustomerId: (id: string) => void
@@ -268,25 +301,46 @@ function CartPanel(p: CartPanelProps) {
         {p.count > 0 && <Badge tone="canary">{p.count} item{p.count > 1 ? 's' : ''}</Badge>}
       </div>
 
+      {/* Pricing channel */}
+      <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+        <span className="eyebrow">Pricing</span>
+        <Segmented
+          size="sm"
+          options={[
+            { value: 'retail', label: 'Retail' },
+            { value: 'wholesale', label: 'Wholesale' },
+          ]}
+          value={p.tier}
+          onChange={(v) => p.setTier(v as PriceTier)}
+        />
+      </div>
+
       {p.cart.length === 0 ? (
         <EmptyState icon={<ShoppingCart className="h-6 w-6" />} title="Cart is empty" description="Tap a product to start a sale." className="py-8" />
       ) : (
-        <div className="max-h-[38vh] space-y-1 overflow-y-auto p-2 lg:max-h-[42vh]">
-          {p.cart.map((l) => (
-            <div key={l.product.id} className="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-black/[0.02]">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-ink">{l.product.name}</p>
-                <p className="text-xs text-ink-soft tnum">{money(l.product.salePrice)} each</p>
+        <div className="max-h-[34vh] space-y-1 overflow-y-auto p-2 lg:max-h-[38vh]">
+          {p.cart.map((l) => {
+            const unitPrice = priceFor(l.product, p.tier, l.qty)
+            const wantsWholesale = p.tier === 'wholesale' && hasWholesale(l.product)
+            const min = l.product.wholesaleMinQty ?? 1
+            const belowMin = wantsWholesale && l.qty < min
+            return (
+              <div key={l.product.id} className="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-black/[0.02]">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink">{l.product.name}</p>
+                  <p className="text-xs text-ink-soft tnum">{money(unitPrice)} / {unitAbbr(l.product.unit)}</p>
+                  {belowMin && <p className="text-[11px] font-medium text-warn">Add {min - l.qty} more for wholesale</p>}
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => p.onDec(l.product.id)} className="grid h-7 w-7 place-items-center rounded-lg ring-1 ring-hair text-ink transition-colors hover:bg-canvas cursor-pointer"><Minus className="h-3.5 w-3.5" /></button>
+                  <span className="w-6 text-center text-sm font-bold tnum">{l.qty}</span>
+                  <button onClick={() => p.onInc(l.product.id)} className="grid h-7 w-7 place-items-center rounded-lg ring-1 ring-hair text-ink transition-colors hover:bg-canvas cursor-pointer"><Plus className="h-3.5 w-3.5" /></button>
+                </div>
+                <span className="w-16 text-right text-sm font-bold text-ink tnum">{money(unitPrice * l.qty)}</span>
+                <button onClick={() => p.onRemove(l.product.id)} aria-label="Remove" className="grid h-7 w-7 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-brick-50 hover:text-brick cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => p.onDec(l.product.id)} className="grid h-7 w-7 place-items-center rounded-lg ring-1 ring-hair text-ink transition-colors hover:bg-canvas cursor-pointer"><Minus className="h-3.5 w-3.5" /></button>
-                <span className="w-6 text-center text-sm font-bold tnum">{l.qty}</span>
-                <button onClick={() => p.onInc(l.product.id)} className="grid h-7 w-7 place-items-center rounded-lg ring-1 ring-hair text-ink transition-colors hover:bg-canvas cursor-pointer"><Plus className="h-3.5 w-3.5" /></button>
-              </div>
-              <span className="w-16 text-right text-sm font-bold text-ink tnum">{money(l.product.salePrice * l.qty)}</span>
-              <button onClick={() => p.onRemove(l.product.id)} aria-label="Remove" className="grid h-7 w-7 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-brick-50 hover:text-brick cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -309,7 +363,7 @@ function CartPanel(p: CartPanelProps) {
           </div>
           {p.method === 'credit' && (
             <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-warn/[0.08] px-2.5 py-1.5 text-[12px] font-medium text-warn ring-1 ring-warn/15">
-              Credit adds to the customer’s balance — no cash is added until they pay.
+              Credit adds to the customer’s balance - no cash is added until they pay.
             </p>
           )}
         </div>
@@ -322,7 +376,7 @@ function CartPanel(p: CartPanelProps) {
           <select className="input py-2 text-sm" value={p.customerId} onChange={(e) => p.setCustomerId(e.target.value)}>
             <option value="">Walk-in customer</option>
             {p.customers.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>{c.name}{c.type === 'wholesale' ? ` · Wholesale${c.company ? ` (${c.company})` : ''}` : ''}</option>
             ))}
           </select>
         </div>

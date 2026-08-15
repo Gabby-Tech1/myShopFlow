@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 interface ChartCardProps {
   title: ReactNode
   term?: string
-  /** Plain-language summary — charts never stand alone (spec §2). */
+  /** Plain-language summary - charts never stand alone (spec §2). */
   summary: ReactNode
   action?: ReactNode
   children: ReactNode
@@ -15,6 +15,7 @@ interface ChartCardProps {
   emptyLabel?: string
   className?: string
   height?: number
+  dataTour?: string
 }
 
 export function ChartCard({
@@ -27,11 +28,12 @@ export function ChartCard({
   emptyLabel = 'No activity recorded for this period.',
   className,
   height = 260,
+  dataTour,
 }: ChartCardProps) {
   return (
-    <Card className={cn('overflow-hidden', className)}>
+    <Card data-tour={dataTour} className={cn('overflow-hidden', className)}>
       <CardHeader title={title} term={term} action={action} />
-      {/* The summary reads first — a quiet lead line, not a loud colored box. */}
+      {/* The summary reads first - a quiet lead line, not a loud colored box. */}
       <p className="mx-5 mt-2.5 border-l-2 border-canary pl-3 text-[13px] leading-relaxed text-ink-soft">
         {summary}
       </p>
@@ -46,7 +48,7 @@ export function ChartCard({
   )
 }
 
-/** Shared Recharts tooltip — exact-value, plain-language (spec §4). */
+/** Shared Recharts tooltip - exact-value, plain-language (spec §4). */
 export function chartTooltipStyle() {
   return {
     contentStyle: {
