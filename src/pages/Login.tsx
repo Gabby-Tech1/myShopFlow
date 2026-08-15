@@ -47,7 +47,7 @@ export function LoginPage() {
                   <input id="password" type="password" className="input pl-11" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
               </div>
-              <div className="flex items-center justify-between text-xs"><label className="flex items-center gap-2 text-ink-soft"><input type="checkbox" className="accent-canary" /> Remember me</label><button className="font-semibold text-ink hover:text-canary-700">Forgot password?</button></div>
+              <div className="flex items-center justify-between text-xs"><label className="flex items-center gap-2 text-ink-soft"><input type="checkbox" className="accent-canary" /> Remember me</label><Link to="/forgot-password" className="font-semibold text-ink hover:text-canary-700">Forgot password?</Link></div>
               <Button className="w-full text-white" size="lg" onClick={() => signIn('admin')}>Log In securely <ArrowRight className="h-5 w-5" /></Button>
             </div>
 

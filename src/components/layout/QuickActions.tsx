@@ -75,7 +75,7 @@ export function QuickActions() {
         onClick={() => setOpen((v) => !v)}
         aria-label="Quick actions"
         aria-expanded={open}
-        className="grid h-14 w-14 place-items-center rounded-full bg-ink text-white shadow-pop transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        className="grid h-14 w-14 place-items-center rounded-full bg-canary text-white shadow-pop transition-transform hover:scale-105 active:scale-95 cursor-pointer"
       >
         <motion.span animate={{ rotate: open ? 45 : 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}>
           <Plus className="h-6 w-6" />

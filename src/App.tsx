@@ -4,6 +4,7 @@ import { useStore } from '@/store/useStore'
 import { useCan, type Capability } from '@/store/access'
 import { LandingPage } from '@/pages/Landing'
 import { LoginPage } from '@/pages/Login'
+import { ForgotPasswordPage } from '@/pages/ForgotPassword'
 import { OnboardingPage } from '@/pages/Onboarding'
 import { DashboardPage } from '@/pages/Dashboard'
 import { PosPage } from '@/pages/Pos'
@@ -36,6 +37,7 @@ export default function App() {
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/get-started" element={<OnboardingPage />} />
 
       {/* App (guarded) */}

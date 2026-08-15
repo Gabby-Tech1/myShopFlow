@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Info } from 'lucide-react'
 import { explain } from '@/lib/explain'
 import { cn } from '@/lib/utils'
@@ -20,15 +21,32 @@ export function Explain({ term, text, className, inline = true }: ExplainProps) 
   const [open, setOpen] = useState(false)
   const id = useId()
   const ref = useRef<HTMLSpanElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [position, setPosition] = useState<{ left: number; top: number; below: boolean } | null>(null)
   const body = text ?? (term ? explain(term) : undefined)
 
   useEffect(() => {
     if (!open) return
+    const updatePosition = () => {
+      const rect = buttonRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const tooltipHalfWidth = 112
+      const left = Math.max(tooltipHalfWidth + 8, Math.min(rect.left + rect.width / 2, window.innerWidth - tooltipHalfWidth - 8))
+      const below = rect.top < 110
+      setPosition({ left, top: below ? rect.bottom + 8 : rect.top - 8, below })
+    }
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    updatePosition()
     document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
   }, [open])
 
   if (!body) return null
@@ -36,6 +54,7 @@ export function Explain({ term, text, className, inline = true }: ExplainProps) 
   return (
     <span ref={ref} className={cn('relative inline-flex', className)}>
       <button
+        ref={buttonRef}
         type="button"
         aria-label={term ? `Explain: ${term}` : 'Explanation'}
         aria-describedby={open ? id : undefined}
@@ -54,16 +73,17 @@ export function Explain({ term, text, className, inline = true }: ExplainProps) 
       >
         <Info className={inline ? 'h-3.5 w-3.5' : 'h-4 w-4'} strokeWidth={2.2} />
       </button>
-      {open && (
+      {open && position && createPortal(
         <span
           id={id}
           role="tooltip"
-          className="absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 rounded-xl bg-ink px-3 py-2 text-left text-xs font-medium leading-relaxed text-white shadow-pop animate-scale-in"
+          className={cn('pointer-events-none fixed z-[200] w-56 -translate-x-1/2 rounded-xl bg-ink px-3 py-2 text-left text-xs font-medium leading-relaxed text-white shadow-pop animate-scale-in', position.below ? '' : '-translate-y-full')}
+          style={{ left: position.left, top: position.top }}
         >
           {body}
-          <span className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-1/2 rotate-45 h-2 w-2 bg-ink" />
+          <span className={cn('absolute left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-ink', position.below ? 'bottom-full translate-y-1/2' : 'top-full -translate-y-1/2')} />
         </span>
-      )}
+      , document.body)}
     </span>
   )
 }
