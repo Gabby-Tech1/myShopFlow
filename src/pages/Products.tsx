@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Plus, Minus, Pencil, PackagePlus, ChevronRight, Boxes, ImagePlus, Trash2 } from 'lucide-react'
+import { Search, Plus, Minus, Pencil, PackagePlus, ChevronRight, Boxes, ImagePlus, Trash2, FolderPlus, X } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { useCan } from '@/store/access'
 import { toast } from '@/store/toast'
@@ -138,6 +138,7 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
   const categories = useStore((s) => s.categories)
   const suppliers = useStore((s) => s.suppliers)
   const addProduct = useStore((s) => s.addProduct)
+  const addCategory = useStore((s) => s.addCategory)
   const canCost = useCan('costPrice')
   const [step, setStep] = useState(1)
   const [categoryId, setCategoryId] = useState('')
@@ -146,10 +147,12 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
   const [attrsOn, setAttrsOn] = useState(false)
   const [attrs, setAttrs] = useState<ProductAttributes>({})
   const [imageUrl, setImageUrl] = useState<string>()
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [categoryName, setCategoryName] = useState('')
 
   useEffect(() => {
     if (open) {
-      setStep(1); setCategoryId(''); setForm(emptyForm); setAttrsOn(false); setAttrs({}); setImageUrl(undefined)
+      setStep(1); setCategoryId(''); setForm(emptyForm); setAttrsOn(false); setAttrs({}); setImageUrl(undefined); setCreatingCategory(false); setCategoryName('')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -177,6 +180,23 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
     onClose()
   }
 
+  const createCategory = () => {
+    const name = categoryName.trim()
+    if (!name) return
+    const existing = categories.find((category) => category.name.toLowerCase() === name.toLowerCase())
+    if (existing) {
+      setCategoryId(existing.id)
+      toast.info('Category already exists', `${existing.name} has been selected.`)
+    } else {
+      addCategory(name, 'Package')
+      const created = useStore.getState().categories.at(-1)
+      if (created) setCategoryId(created.id)
+      toast.success('Category created', `${name} is ready to use.`)
+    }
+    setCategoryName('')
+    setCreatingCategory(false)
+  }
+
   return (
     <Modal
       open={open}
@@ -198,8 +218,9 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
       }
     >
       {step === 1 ? (
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          {categories.map((c) => (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {categories.map((c) => (
             <button
               key={c.id}
               onClick={() => setCategoryId(c.id)}
@@ -211,7 +232,15 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
               <Icon name={c.icon ?? 'Package'} className="h-6 w-6 text-ink" />
               <span className="text-sm font-semibold text-ink">{c.name}</span>
             </button>
-          ))}
+            ))}
+            {!creatingCategory && <button type="button" onClick={() => setCreatingCategory(true)} className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-canary/60 bg-canary-50/50 p-4 text-canary-700 transition-colors hover:bg-canary-50"><FolderPlus className="h-6 w-6" /><span className="text-sm font-semibold">New category</span></button>}
+          </div>
+          {creatingCategory && (
+            <div className="rounded-2xl border border-canary/30 bg-canary-50 p-3.5">
+              <label className="label" htmlFor="new-category">Category name</label>
+              <div className="flex gap-2"><input id="new-category" autoFocus className="input bg-white" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); createCategory() } }} placeholder="e.g. Frozen Foods" /><Button type="button" onClick={createCategory} disabled={!categoryName.trim()} className="shrink-0 text-white">Create</Button><button type="button" aria-label="Cancel category creation" onClick={() => { setCreatingCategory(false); setCategoryName('') }} className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-xl text-ink-soft hover:bg-white"><X className="h-4 w-4" /></button></div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-4">

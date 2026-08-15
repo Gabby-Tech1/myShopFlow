@@ -1,6 +1,5 @@
 import { Modal } from './Modal'
 import { Button } from './Button'
-import { LogoMark } from './Logo'
 import { Badge } from './Badge'
 import { money } from '@/lib/format'
 import { fmtDateTime } from '@/lib/datetime'
@@ -50,7 +49,9 @@ export function ReceiptModal({ sale, open, onClose }: { sale: Sale | null; open:
       }
     >
       <div className="text-center">
-        <div className="mx-auto mb-2 flex justify-center"><LogoMark size={36} /></div>
+        <div className="mx-auto mb-3 flex justify-center">
+          <img src="/images/logo2.png" alt="MyShopFlow" className="h-16 w-auto object-contain" />
+        </div>
         {receiptSettings.showBusinessDetails && <>
           <h2 className="text-lg font-bold text-ink">{business.name}</h2>
           <p className="text-xs text-ink-soft">{business.address}</p>
