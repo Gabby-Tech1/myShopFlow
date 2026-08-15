@@ -2,6 +2,7 @@ import type { CurrencyCode } from '@/types'
 
 const CURRENCY_META: Record<CurrencyCode, { symbol: string; name: string; flag: string; locale: string }> = {
   GHS: { symbol: 'GH₵', name: 'Ghana Cedi', flag: '🇬🇭', locale: 'en-GH' },
+  NGN: { symbol: '₦', name: 'Nigerian Naira', flag: '🇳🇬', locale: 'en-NG' },
   USD: { symbol: '$', name: 'US Dollar', flag: '🇺🇸', locale: 'en-US' },
   EUR: { symbol: '€', name: 'Euro', flag: '🇪🇺', locale: 'de-DE' },
   CNY: { symbol: '¥', name: 'Chinese Yuan', flag: '🇨🇳', locale: 'zh-CN' },

@@ -7,6 +7,7 @@ import type {
   Category,
   Customer,
   CustomerPayment,
+  CurrencyCode,
   Expense,
   Location,
   PaymentMethod,
@@ -37,7 +38,7 @@ const DEFAULT_PROFILE: BusinessProfile = {
 
 const DEFAULT_SETTINGS: Settings = {
   lowStockThreshold: 10,
-  supportedCurrencies: ['GHS', 'USD', 'EUR', 'CNY', 'TRY', 'XOF'],
+  supportedCurrencies: ['GHS', 'NGN', 'USD', 'EUR', 'CNY', 'TRY', 'XOF'],
   fxProviderConnected: true,
   fxLastSync: new Date().toISOString(),
   voiceLocale: 'en-GH',
@@ -550,6 +551,7 @@ export const useStore = create<StoreState>()(
           settings: {
             ...current.settings,
             ...savedSettings,
+            supportedCurrencies: Array.from(new Set([...(savedSettings?.supportedCurrencies ?? current.settings.supportedCurrencies), 'NGN' as CurrencyCode])),
             notifications: { ...current.settings.notifications, ...savedSettings?.notifications },
             pos: { ...current.settings.pos, ...savedSettings?.pos },
             customers: { ...current.settings.customers, ...savedSettings?.customers },

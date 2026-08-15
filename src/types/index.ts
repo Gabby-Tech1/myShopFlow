@@ -4,7 +4,7 @@
 
 export type Role = 'admin' | 'staff'
 
-export type CurrencyCode = 'GHS' | 'USD' | 'EUR' | 'CNY' | 'TRY' | 'XOF'
+export type CurrencyCode = 'GHS' | 'NGN' | 'USD' | 'EUR' | 'CNY' | 'TRY' | 'XOF'
 
 export type PaymentMethod = 'cash' | 'momo' | 'card' | 'credit'
 

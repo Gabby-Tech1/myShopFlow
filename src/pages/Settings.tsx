@@ -171,7 +171,7 @@ function BusinessPanel() {
   )
 }
 
-const ALL_CURRENCIES: CurrencyCode[] = ['GHS', 'USD', 'EUR', 'CNY', 'TRY', 'XOF']
+const ALL_CURRENCIES: CurrencyCode[] = ['GHS', 'NGN', 'USD', 'EUR', 'CNY', 'TRY', 'XOF']
 function CurrencyPanel() {
   const settings = useStore((s) => s.settings)
   const update = useStore((s) => s.updateSettings)

@@ -15,6 +15,7 @@ export const FX_RATE_TYPE = 'Mid-Market Rate'
 /** Reference rate expressed as GHS per 1 unit of the currency. Base = GHS. */
 const BASE_RATES: Record<CurrencyCode, number> = {
   GHS: 1,
+  NGN: 0.01,
   USD: 11.9,
   EUR: 12.85,
   CNY: 1.64,
