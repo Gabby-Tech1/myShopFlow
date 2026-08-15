@@ -72,7 +72,7 @@ export function CashFlowPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Financial clarity" title="Follow every cedi through the business" description="Understand what came in, what went out and what remains-without accounting jargon." action={<Button size="sm" onClick={() => setAdjustOpen(true)}><Plus className="h-4 w-4" /> Add adjustment</Button>} />
+      <PageHero eyebrow="Financial clarity" title="Follow every cedi through the business" description="Understand what came in, what went out and what remains-without accounting jargon." action={<Button size="sm" onClick={() => setAdjustOpen(true)} className='text-white'><Plus className="h-4 w-4" /> Add adjustment</Button>} />
       {/* Range */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-ink-soft">The record of money actually entering and leaving your business.</p>
@@ -254,7 +254,7 @@ function AdjustModal({ open, onClose }: { open: boolean; onClose: () => void }) 
       onClose={onClose}
       title="Manual cash adjustment"
       description="Admin-only correction to your recorded cash. Every adjustment is logged."
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={submit} disabled={amt <= 0 || !reason.trim()}>Save adjustment</Button></>}
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={submit} disabled={amt <= 0 || !reason.trim()} className='text-white'>Save adjustment</Button></>}
     >
       <div className="space-y-4">
         <Segmented options={[{ value: 'in', label: 'Add cash (+)' }, { value: 'out', label: 'Remove cash (−)' }]} value={direction} onChange={(v) => setDirection(v as 'in' | 'out')} className="w-full [&>button]:flex-1" />

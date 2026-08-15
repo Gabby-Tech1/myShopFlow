@@ -217,7 +217,7 @@ export function DashboardPage() {
             onClick={() => openModal('registerCustomer')}
             className="group w-full overflow-hidden rounded-2xl bg-ink p-5 text-left text-white shadow-card transition-transform hover:-translate-y-0.5 cursor-pointer"
           >
-            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-canary text-ink"><Mic className="h-5 w-5" /></div>
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-canary text-white"><Mic className="h-5 w-5" /></div>
             <p className="text-base font-bold">Register a customer by voice</p>
             <p className="mt-1 text-sm text-white/70">Speak their name and number - we capture it for you.</p>
             <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-canary">Start <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>

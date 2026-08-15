@@ -42,7 +42,7 @@ export function LocationsPage() {
         eyebrow="Multi-location"
         title="Locations & warehouses"
         description="Track stock across every shop and warehouse, and move it where it's needed."
-        action={<div className="flex gap-2"><Button variant="outline" className='hover:bg-white' onClick={() => setTransferOpen(true)}><ArrowLeftRight className="h-4 w-4" /> Transfer</Button><Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add location</Button></div>}
+        action={<div className="flex gap-2"><Button variant="outline" className='hover:bg-white' onClick={() => setTransferOpen(true)}><ArrowLeftRight className="h-4 w-4" /> Transfer</Button><Button onClick={() => setAddOpen(true)} className='text-white'><Plus className="h-4 w-4" /> Add location</Button></div>}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -145,7 +145,7 @@ function AddLocationModal({ open, onClose }: { open: boolean; onClose: () => voi
   }
   return (
     <Modal open={open} onClose={onClose} title="Add location" description="A new shop, branch or warehouse to hold stock."
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={submit} disabled={!name.trim()}>Add location</Button></>}>
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={submit} disabled={!name.trim()} className='text-white'>Add location</Button></>}>
       <div className="space-y-4">
         <div><label className="label">Location name</label><input className="input" placeholder="e.g. East Legon Branch" value={name} onChange={(e) => setName(e.target.value)} autoFocus /></div>
         <div>
@@ -183,7 +183,7 @@ function TransferModal({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Modal open={open} onClose={onClose} title="Transfer stock" description="Move units from one location to another. Your total stock stays the same."
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={submit} disabled={!valid}>Transfer</Button></>}>
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={submit} disabled={!valid} className='text-white'>Transfer</Button></>}>
       <div className="space-y-4">
         <div>
           <label className="label">Product</label>

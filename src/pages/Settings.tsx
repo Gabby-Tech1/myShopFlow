@@ -165,7 +165,7 @@ function BusinessPanel() {
       <Field label="Description"><textarea className="input min-h-[80px]" value={form.description ?? ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => setForm(profile)} disabled={!dirty}>Reset</Button>
-        <Button onClick={() => { update(form); toast.success('Saved', 'Business profile updated.') }} disabled={!dirty}><Check className="h-4 w-4" /> Save changes</Button>
+        <Button onClick={() => { update(form); toast.success('Saved', 'Business profile updated.') }} disabled={!dirty} className='text-white'><Check className="h-4 w-4" /> Save changes</Button>
       </div>
     </Panel>
   )
@@ -232,15 +232,15 @@ function StaffPanel() {
         <select className="input sm:w-56" value={locationId} onChange={(e) => setLocationId(e.target.value)} aria-label="Assign to location">
           {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
-        <Button onClick={() => { if (!name.trim()) return; addStaff(name.trim(), locationId); toast.success('Staff added', `${name.trim()} can sign in at ${locName(locationId) ?? 'their location'}.`); setName('') }}>Add</Button>
+        <Button onClick={() => { if (!name.trim()) return; addStaff(name.trim(), locationId); toast.success('Staff added', `${name.trim()} can sign in at ${locName(locationId) ?? 'their location'}.`); setName('') }} className='text-white'>Add</Button>
       </div>
       <div className="space-y-2">
         {users.map((u) => (
           <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-hair p-3.5">
             <div className="flex items-center gap-3">
-              <div className={cn('grid h-9 w-9 place-items-center rounded-full text-sm font-bold', u.role === 'admin' ? 'bg-canary text-ink' : 'bg-brick text-white')}>{u.name.slice(0, 1)}</div>
+              <div className={cn('grid h-9 w-9 place-items-center rounded-full text-sm font-bold', u.role === 'admin' ? 'bg-canary text-white' : 'bg-brick text-white')}>{u.name.slice(0, 1)}</div>
               <div>
-                <p className="text-sm font-semibold text-ink">{u.name} {u.role === 'admin' ? <Badge tone="canary">Owner · all locations</Badge> : locName(u.locationId) && <Badge tone="neutral">{locName(u.locationId)}</Badge>}</p>
+                <p className="text-sm font-semibold text-ink">{u.name} {u.role === 'admin' ? <Badge tone="canary" className='ml-3'>Owner · all locations</Badge> : locName(u.locationId) && <Badge tone="neutral">{locName(u.locationId)}</Badge>}</p>
                 <p className="text-xs text-ink-soft">{u.pin ? `PIN ${u.pin}` : 'Password login'} · {u.active ? 'Active' : 'Inactive'}</p>
               </div>
             </div>

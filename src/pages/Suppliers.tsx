@@ -40,7 +40,7 @@ export function SuppliersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Supply network" title="Suppliers" description="Keep supplier contacts and the products they provide in one place." action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add supplier</Button>} />
+      <PageHero eyebrow="Supply network" title="Suppliers" description="Keep supplier contacts and the products they provide in one place." action={<Button onClick={() => setAddOpen(true)} className='text-white'><Plus className="h-4 w-4" /> Add supplier</Button>} />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Summary icon={<Truck className="h-5 w-5" />} label="Suppliers" value={suppliers.length} />

@@ -24,7 +24,7 @@ export function LoginPage() {
   return (
     <div className="grid min-h-screen bg-[#F8F8F6] lg:grid-cols-[0.9fr_1.1fr]">
       {/* Form */}
-      <div className="flex flex-col justify-center py-8  lg:px-16 xl:px-24">
+      <div className="flex flex-col justify-center py-8 lg:px-12">
         <div className="mx-auto w-full max-w-xl p-7">
           <Link to="/"><Logo /></Link>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -48,7 +48,7 @@ export function LoginPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs"><label className="flex items-center gap-2 text-ink-soft"><input type="checkbox" className="accent-canary" /> Remember me</label><button className="font-semibold text-ink hover:text-canary-700">Forgot password?</button></div>
-              <Button className="w-full" size="lg" onClick={() => signIn('admin')}>Log In securely <ArrowRight className="h-5 w-5" /></Button>
+              <Button className="w-full text-white" size="lg" onClick={() => signIn('admin')}>Log In securely <ArrowRight className="h-5 w-5" /></Button>
             </div>
 
             <div className="my-6 flex items-center gap-3 text-xs text-ink-soft">

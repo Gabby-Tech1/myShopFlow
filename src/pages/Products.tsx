@@ -61,7 +61,7 @@ export function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Inventory control" title="Know exactly what is on your shelves" description="Monitor stock health, pricing and inventory value from one focused workspace." action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add product</Button>} />
+      <PageHero eyebrow="Inventory control" title="Know exactly what is on your shelves" description="Monitor stock health, pricing and inventory value from one focused workspace." action={<Button onClick={() => setAddOpen(true)} className='text-white'><Plus className="h-4 w-4" /> Add product</Button>} />
       {/* Summary */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile label="Products" value={products.length} icon={<Boxes className="h-5 w-5" />} hint="active items" />
@@ -93,7 +93,7 @@ export function ProductsPage() {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <EmptyState icon={<Search className="h-6 w-6" />} title="No products match" description="Adjust your filters or add a new product." action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add product</Button>} />
+        <EmptyState icon={<Search className="h-6 w-6" />} title="No products match" description="Adjust your filters or add a new product." action={<Button onClick={() => setAddOpen(true)} className="text-white"><Plus className="h-4 w-4" /> Add product</Button>} />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((p) => (
@@ -187,12 +187,12 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
         step === 1 ? (
           <>
             <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={() => setStep(2)} disabled={!categoryId}>Continue <ChevronRight className="h-4 w-4" /></Button>
+            <Button onClick={() => setStep(2)} disabled={!categoryId} className='text-white'>Continue <ChevronRight className="h-4 w-4" /></Button>
           </>
         ) : (
           <>
             <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-            <Button onClick={save} disabled={!form.name || !form.salePrice}>Save product</Button>
+            <Button onClick={save} disabled={!form.name || !form.salePrice} className='text-white'>Save product</Button>
           </>
         )
       }

@@ -391,7 +391,7 @@ function CartPanel(p: CartPanelProps) {
           <span className="text-sm font-semibold text-ink-soft">Total</span>
           <Money value={p.total} className="text-2xl font-bold text-ink" />
         </div>
-        <Button className="w-full" size="lg" disabled={!p.cart.length} onClick={p.onCheckout}>
+        <Button className="w-full text-white" size="lg" disabled={!p.cart.length} onClick={p.onCheckout}>
           {p.method === 'credit' ? 'Record credit sale' : `Charge ${money(p.total)}`}
         </Button>
       </div>

@@ -111,7 +111,7 @@ export function Topbar({ title, onMenu }: { title: string; onMenu: () => void })
           <button onClick={() => setProfileOpen((v) => !v)} aria-expanded={profileOpen} aria-label="Open account menu" className="flex items-center gap-2 rounded-xl p-1 pr-2 transition-colors hover:bg-canvas cursor-pointer">
           <div
             className={cn(
-              'grid h-9 w-9 place-items-center rounded-full text-sm font-bold text-ink',
+              'grid h-9 w-9 place-items-center rounded-full text-sm font-bold text-white',
               role === 'admin' ? 'bg-canary' : 'bg-brick text-white',
             )}
           >

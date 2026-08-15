@@ -36,7 +36,7 @@ export function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Customer relationships" title="Turn every customer into a relationship" description="Keep purchase history, contact details and outstanding balances clear and actionable." action={<Button onClick={() => openModal('registerCustomer')}><UserPlus className="h-4 w-4" /> Register customer</Button>} />
+      <PageHero eyebrow="Customer relationships" title="Turn every customer into a relationship" description="Keep purchase history, contact details and outstanding balances clear and actionable." action={<Button onClick={() => openModal('registerCustomer')} className='text-white'><UserPlus className="h-4 w-4" /> Register customer</Button>} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatTile label="Customers" value={customers.length} icon={<ShoppingBag className="h-5 w-5" />} />
         <StatTile label="Owing" value={owing} icon={<Clock className="h-5 w-5" />} accent="brick" hint="have a balance" />
@@ -104,7 +104,7 @@ function CustomerProfile({ customer, onClose }: { customer: Customer | null; onC
       size="lg"
       title={<span className="flex items-center gap-2">{customer.name}{customer.registrationMethod === 'voice' && <Badge tone="canary" dot>Voice</Badge>}</span>}
       description={customer.phone}
-      footer={canPay ? <><Button variant="outline" onClick={onClose}>Close</Button><Button onClick={() => { onClose(); openModal('payment', { customerId: customer.id }) }} disabled={customer.outstanding <= 0}><HandCoins className="h-4 w-4" /> Receive payment</Button></> : <Button variant="outline" onClick={onClose}>Close</Button>}
+      footer={canPay ? <><Button variant="outline" onClick={onClose}>Close</Button><Button onClick={() => { onClose(); openModal('payment', { customerId: customer.id }) }} disabled={customer.outstanding <= 0} className='text-white'><HandCoins className="h-4 w-4" /> Receive payment</Button></> : <Button variant="outline" onClick={onClose}>Close</Button>}
     >
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
