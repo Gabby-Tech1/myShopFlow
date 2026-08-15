@@ -49,7 +49,7 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/pos" element={<PosPage />} />
         <Route path="/products" element={<ProductsPage />} />
-        <Route path="/locations" element={<LocationsPage />} />
+        <Route path="/locations" element={<RequireCap cap="allLocations"><LocationsPage /></RequireCap>} />
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/suppliers" element={<RequireCap cap="suppliers"><SuppliersPage /></RequireCap>} />
         <Route path="/cashflow" element={<RequireCap cap="cashflow"><CashFlowPage /></RequireCap>} />

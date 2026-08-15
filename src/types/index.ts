@@ -62,6 +62,8 @@ export interface User {
   pin?: string
   active: boolean
   lastLogin?: string
+  /** Staff are assigned to one location and only see that location. Admins see all. */
+  locationId?: string
 }
 
 export interface Supplier {

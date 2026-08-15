@@ -59,8 +59,8 @@ export interface SeedState {
 export function buildSeed(): SeedState {
   const users: User[] = [
     { id: 'u_ama', name: 'Ama Owusu', role: 'admin', active: true, lastLogin: iso(0, 8, 12) },
-    { id: 'u_kofi', name: 'Kofi Asante', role: 'staff', pin: '2468', active: true, lastLogin: iso(0, 8, 40) },
-    { id: 'u_akos', name: 'Akosua Darko', role: 'staff', pin: '1357', active: true, lastLogin: iso(1, 17, 20) },
+    { id: 'u_kofi', name: 'Kofi Asante', role: 'staff', pin: '2468', active: true, lastLogin: iso(0, 8, 40), locationId: 'loc_main' },
+    { id: 'u_akos', name: 'Akosua Darko', role: 'staff', pin: '1357', active: true, lastLogin: iso(1, 17, 20), locationId: 'loc_branch' },
   ]
 
   const categories: Category[] = [

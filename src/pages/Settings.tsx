@@ -218,15 +218,21 @@ function FxPanel() {
 
 function StaffPanel() {
   const users = useStore((s) => s.users)
+  const locations = useStore((s) => s.locations)
   const addStaff = useStore((s) => s.addStaff)
   const toggleActive = useStore((s) => s.toggleStaffActive)
   const regen = useStore((s) => s.regeneratePin)
   const [name, setName] = useState('')
+  const [locationId, setLocationId] = useState(locations[0]?.id ?? '')
+  const locName = (id?: string) => locations.find((l) => l.id === id)?.name
   return (
-    <Panel title="Users & Staff" description="Staff don’t self-register - you invite them and manage access.">
-      <div className="flex gap-2">
+    <Panel title="Users & Staff" description="Staff don’t self-register - you invite them and manage access. Each works at one location and only sees that location.">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <input className="input" placeholder="New staff name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Button onClick={() => { if (!name.trim()) return; addStaff(name.trim()); toast.success('Staff added', `${name.trim()} can now sign in with a PIN.`); setName('') }}>Add</Button>
+        <select className="input sm:w-56" value={locationId} onChange={(e) => setLocationId(e.target.value)} aria-label="Assign to location">
+          {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+        </select>
+        <Button onClick={() => { if (!name.trim()) return; addStaff(name.trim(), locationId); toast.success('Staff added', `${name.trim()} can sign in at ${locName(locationId) ?? 'their location'}.`); setName('') }}>Add</Button>
       </div>
       <div className="space-y-2">
         {users.map((u) => (
@@ -234,7 +240,7 @@ function StaffPanel() {
             <div className="flex items-center gap-3">
               <div className={cn('grid h-9 w-9 place-items-center rounded-full text-sm font-bold', u.role === 'admin' ? 'bg-canary text-ink' : 'bg-brick text-white')}>{u.name.slice(0, 1)}</div>
               <div>
-                <p className="text-sm font-semibold text-ink">{u.name} {u.role === 'admin' && <Badge tone="canary">Owner</Badge>}</p>
+                <p className="text-sm font-semibold text-ink">{u.name} {u.role === 'admin' ? <Badge tone="canary">Owner · all locations</Badge> : locName(u.locationId) && <Badge tone="neutral">{locName(u.locationId)}</Badge>}</p>
                 <p className="text-xs text-ink-soft">{u.pin ? `PIN ${u.pin}` : 'Password login'} · {u.active ? 'Active' : 'Inactive'}</p>
               </div>
             </div>

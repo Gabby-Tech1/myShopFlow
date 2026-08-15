@@ -19,7 +19,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     section: 'Manage',
     items: [
       { to: '/products', label: 'Products', icon: 'Package' },
-      { to: '/locations', label: 'Locations', icon: 'Warehouse' },
+      { to: '/locations', label: 'Locations', icon: 'Warehouse', cap: 'allLocations' },
       { to: '/customers', label: 'Customers', icon: 'Users' },
       { to: '/suppliers', label: 'Suppliers', icon: 'Truck', cap: 'suppliers' },
       { to: '/cashflow', label: 'Cash Flow', icon: 'ArrowRightLeft', cap: 'cashflow' },

@@ -59,8 +59,16 @@ export function Topbar({ title, onMenu }: { title: string; onMenu: () => void })
           <Search className="h-5 w-5" />
         </button>
 
-        {/* Active location switcher */}
-        {locations.length > 1 && (
+        {/* Staff are pinned to their location (read-only chip). */}
+        {role === 'staff' && activeLocation && (
+          <div className="hidden items-center gap-1.5 rounded-xl bg-canvas px-3 py-2 text-[13px] font-semibold text-ink ring-1 ring-hair sm:flex" title="Your location">
+            {activeLocation.kind === 'warehouse' ? <Warehouse className="h-4 w-4 text-ink-soft" /> : <Store className="h-4 w-4 text-ink-soft" />}
+            {activeLocation.name}
+          </div>
+        )}
+
+        {/* Admins can switch the active location */}
+        {role === 'admin' && locations.length > 1 && (
           <div className="relative hidden items-center sm:flex" title="Active location — sales draw stock from here">
             <span className="pointer-events-none absolute left-2.5 text-ink-soft">
               {activeLocation?.kind === 'warehouse' ? <Warehouse className="h-4 w-4" /> : <Store className="h-4 w-4" />}

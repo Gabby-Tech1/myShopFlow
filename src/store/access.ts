@@ -15,6 +15,7 @@ export type Capability =
   | 'receivePayment'
   | 'sales'
   | 'customers'
+  | 'allLocations' // view/manage every location (admin only)
 
 const ADMIN_ONLY: Capability[] = [
   'financials',
@@ -26,6 +27,7 @@ const ADMIN_ONLY: Capability[] = [
   'activity',
   'userManagement',
   'businessSettings',
+  'allLocations',
 ]
 
 export function useCan(cap: Capability): boolean {

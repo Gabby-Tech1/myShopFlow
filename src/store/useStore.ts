@@ -132,7 +132,7 @@ interface StoreState {
 
   updateSettings: (patch: Partial<Settings>) => void
   updateBusinessProfile: (patch: Partial<BusinessProfile>) => void
-  addStaff: (name: string) => void
+  addStaff: (name: string, locationId?: string) => void
   toggleStaffActive: (id: string) => void
   regeneratePin: (id: string) => void
 
@@ -203,7 +203,9 @@ export const useStore = create<StoreState>()(
             role === 'admin'
               ? st.users.find((u) => u.role === 'admin')!
               : st.users.find((u) => u.role === 'staff') ?? st.users[0]
-          return { authed: true, role, currentUserId: user.id }
+          // Staff are locked to their assigned location.
+          const activeLocationId = user.role === 'staff' && user.locationId ? user.locationId : st.activeLocationId
+          return { authed: true, role, currentUserId: user.id, activeLocationId }
         }),
       logout: () => set({ authed: false }),
       completeDashboardTutorial: () => set({ hasSeenDashboardTutorial: true }),
@@ -214,9 +216,15 @@ export const useStore = create<StoreState>()(
             role === 'admin'
               ? st.users.find((u) => u.role === 'admin')!
               : st.users.find((u) => u.role === 'staff') ?? st.users[0]
-          return { role, currentUserId: user.id }
+          const activeLocationId = user.role === 'staff' && user.locationId ? user.locationId : st.activeLocationId
+          return { role, currentUserId: user.id, activeLocationId }
         }),
-      setCurrentUser: (userId) => set({ currentUserId: userId }),
+      setCurrentUser: (userId) =>
+        set((st) => {
+          const user = st.users.find((u) => u.id === userId)
+          const activeLocationId = user?.role === 'staff' && user.locationId ? user.locationId : st.activeLocationId
+          return { currentUserId: userId, activeLocationId }
+        }),
 
       // --- Paid sale → inventory↓, sales↑, cash inflow (via ledger),
       //     customer history, activity. Credit sale adds NO cash. (spec §6/§8/§15)
@@ -390,7 +398,13 @@ export const useStore = create<StoreState>()(
           return { categories, products }
         }),
 
-      setActiveLocation: (locationId) => set({ activeLocationId: locationId }),
+      setActiveLocation: (locationId) =>
+        set((st) => {
+          // Staff are pinned to their own location and cannot switch.
+          const me = st.users.find((u) => u.id === st.currentUserId)
+          if (me?.role === 'staff') return {}
+          return { activeLocationId: locationId }
+        }),
 
       addLocation: (name, kind, address) =>
         set((st) => {
@@ -498,11 +512,13 @@ export const useStore = create<StoreState>()(
       updateSettings: (patch) => set((st) => ({ settings: { ...st.settings, ...patch } })),
       updateBusinessProfile: (patch) => set((st) => ({ businessProfile: { ...st.businessProfile, ...patch } })),
 
-      addStaff: (name) =>
+      addStaff: (name, locationId) =>
         set((st) => {
           const pin = String(Math.floor(1000 + Math.random() * 9000))
-          const user: User = { id: uid('u'), name, role: 'staff', pin, active: true }
-          const act = logActivity(get, { action: 'Staff added', module: 'staff', refId: user.id, detail: name })
+          const loc = locationId ?? st.locations[0]?.id
+          const user: User = { id: uid('u'), name, role: 'staff', pin, active: true, locationId: loc }
+          const locName = st.locations.find((l) => l.id === loc)?.name
+          const act = logActivity(get, { action: 'Staff added', module: 'staff', refId: user.id, detail: locName ? `${name} · ${locName}` : name })
           return { users: [...st.users, user], activity: [act, ...st.activity] }
         }),
       toggleStaffActive: (id) =>
