@@ -41,7 +41,7 @@ export function Topbar({ title, onMenu }: { title: string; onMenu: () => void })
         <h1 className="truncate text-[17px] font-bold tracking-tightest text-ink">{title}</h1>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-0.5 sm:gap-2">
         {/* Global search */}
         <button
           onClick={() => setSearchOpen(true)}
@@ -54,9 +54,18 @@ export function Topbar({ title, onMenu }: { title: string; onMenu: () => void })
         <button
           onClick={() => setSearchOpen(true)}
           aria-label="Search"
-          className="grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-black/[0.05] md:hidden cursor-pointer"
+          className="grid h-9 w-9 place-items-center rounded-xl text-ink hover:bg-black/[0.05] sm:h-10 sm:w-10 md:hidden cursor-pointer"
         >
           <Search className="h-5 w-5" />
+        </button>
+
+        <button
+          onClick={() => navigate('/currency')}
+          aria-label="Currency and exchange rates"
+          title="Currency and exchange rates"
+          className="grid h-9 w-9 place-items-center rounded-xl text-ink transition-colors hover:bg-canary-50 hover:text-canary-700 sm:hidden cursor-pointer"
+        >
+          <TrendingUp className="h-5 w-5" />
         </button>
 
         {/* Staff are pinned to their location (read-only chip). */}
@@ -100,10 +109,10 @@ export function Topbar({ title, onMenu }: { title: string; onMenu: () => void })
         <button
           onClick={() => navigate('/activity')}
           aria-label="Notifications"
-          className="relative grid h-10 w-10 place-items-center rounded-xl text-ink hover:bg-black/[0.05] cursor-pointer"
+          className="relative grid h-9 w-9 place-items-center rounded-xl text-ink hover:bg-black/[0.05] sm:h-10 sm:w-10 cursor-pointer"
         >
           <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brick ring-2 ring-canvas" />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brick ring-2 ring-canvas sm:right-2 sm:top-2" />
         </button>
 
         {/* User */}

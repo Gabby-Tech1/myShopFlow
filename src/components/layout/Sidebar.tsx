@@ -2,7 +2,6 @@ import { NavLink } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { NAV } from './nav'
 import { Icon } from '@/components/ui/Icon'
-import { Logo } from '@/components/ui/Logo'
 import { useStore } from '@/store/useStore'
 import { useCan } from '@/store/access'
 import { cn } from '@/lib/utils'
@@ -81,7 +80,10 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
       {/* Desktop */}
       <aside className="hidden lg:flex lg:w-[248px] lg:flex-col lg:shrink-0 bg-sidebar border-r border-sidebar-line">
         <div className="px-5 py-6">
-          <Logo dark />
+          <div className="flex items-center gap-2.5">
+            <img src="/images/logo-alone.png" alt="" className="h-[34px] w-[34px] shrink-0 object-contain" />
+            <span className="text-[17px] font-bold tracking-tight text-white">MyShop<span className="text-canary">Flow</span></span>
+          </div>
         </div>
         <NavItems />
       </aside>
@@ -99,7 +101,10 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
           )}
         >
           <div className="flex items-center justify-between px-5 py-5">
-            <Logo dark />
+            <div className="flex items-center gap-2.5">
+              <img src="/images/logo-alone.png" alt="" className="h-[34px] w-[34px] shrink-0 object-contain" />
+              <span className="text-[17px] font-bold tracking-tight text-white">MyShop<span className="text-canary">Flow</span></span>
+            </div>
             <button onClick={onClose} aria-label="Close menu" className="grid h-9 w-9 place-items-center rounded-xl text-sidebar-muted hover:bg-white/[0.06] cursor-pointer">
               <X className="h-5 w-5" />
             </button>
