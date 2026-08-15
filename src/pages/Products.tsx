@@ -18,12 +18,15 @@ import { UNIT_LABEL, UNIT_OPTIONS, unitAbbr, hasWholesale } from '@/lib/pricing'
 import { fmtDate } from '@/lib/datetime'
 import { cn } from '@/lib/utils'
 import type { Product, ProductAttributes, UnitOfMeasure } from '@/types'
-import { inventoryValue, lowStock, retailValue, stockStatus } from '@/store/selectors'
+import { inventoryValue, lowStock, retailValue, scopeProductsToLocation, stockStatus } from '@/store/selectors'
 
 type StatusFilter = 'all' | 'ok' | 'low' | 'out'
 
 export function ProductsPage() {
-  const products = useStore((s) => s.products)
+  const rawProducts = useStore((s) => s.products)
+  const activeLocationId = useStore((s) => s.activeLocationId)
+  // Stock, value and low-stock reflect the active location (staff = their branch).
+  const products = useMemo(() => scopeProductsToLocation(rawProducts, activeLocationId), [rawProducts, activeLocationId])
   const categories = useStore((s) => s.categories)
   const adjustStock = useStore((s) => s.adjustStock)
   const canCost = useCan('costPrice')

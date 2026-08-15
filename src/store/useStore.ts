@@ -153,7 +153,7 @@ function initial() {
     categories: s.categories,
     suppliers: s.suppliers,
     locations: s.locations,
-    activeLocationId: s.locations[0].id,
+    activeLocationId: 'all', // admins default to the combined view; staff get pinned on login
     products: s.products,
     customers: s.customers,
     sales: s.sales,
@@ -232,6 +232,9 @@ export const useStore = create<StoreState>()(
         const now = new Date().toISOString()
         const subtotal = +input.items.reduce((s, it) => s + it.lineTotal, 0).toFixed(2)
         const isCredit = input.paymentMethod === 'credit'
+        const gs = get()
+        // A sale always happens at a concrete location ('all' resolves to the first).
+        const sellLoc = gs.activeLocationId === 'all' ? gs.locations[0].id : gs.activeLocationId
         const sale: Sale = {
           id: uid('sale'),
           receiptNo: receiptNo(),
@@ -240,16 +243,17 @@ export const useStore = create<StoreState>()(
           total: subtotal,
           paymentMethod: input.paymentMethod,
           tier: input.tier ?? 'retail',
+          locationId: sellLoc,
           paid: !isCredit,
           amountPaid: isCredit ? 0 : subtotal,
           customerId: input.customerId,
-          userId: get().currentUserId,
+          userId: gs.currentUserId,
           createdAt: now,
         }
         set((st) => {
           const products = st.products.map((p) => {
             const line = input.items.find((it) => it.productId === p.id)
-            return line ? applyStockDelta(p, st.activeLocationId, -line.qty) : p
+            return line ? applyStockDelta(p, sellLoc, -line.qty) : p
           })
           const customers = st.customers.map((c) => {
             if (c.id !== input.customerId) return c

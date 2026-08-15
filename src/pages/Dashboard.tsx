@@ -51,15 +51,23 @@ import {
   lowStock,
   profitSummary,
   revenueOf,
+  salesAtLocation,
   salesInRange,
   salesTrend,
+  scopeProductsToLocation,
   selectCashBalance,
   totalOutstanding,
 } from '@/store/selectors'
 import { buildInsights } from '@/store/insights'
 
 export function DashboardPage() {
-  const store = useStore()
+  const raw = useStore()
+  // Scope inventory and sales to the active location (staff = their branch, admin 'all' = combined).
+  const store = {
+    ...raw,
+    sales: salesAtLocation(raw.sales, raw.activeLocationId),
+    products: scopeProductsToLocation(raw.products, raw.activeLocationId),
+  }
   const canFin = useCan('financials')
   const openModal = useUi((s) => s.openModal)
   const [rangeKey, setRangeKey] = useState<RangeKey>('month')

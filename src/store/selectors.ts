@@ -40,18 +40,37 @@ export function stockStatus(p: Product): 'out' | 'low' | 'ok' {
   return 'ok'
 }
 
-/** Units of a product at a specific location. */
+/** The sentinel meaning "all locations combined" (admin-only view). */
+export const ALL_LOCATIONS = 'all'
+
+/** Units of a product at a specific location, or the combined total for 'all'. */
 export function stockAt(p: Product, locId: string): number {
+  if (locId === ALL_LOCATIONS) return p.stock
   return p.stockByLocation ? p.stockByLocation[locId] ?? 0 : p.stock
 }
 
 /** Stock status at a location. The threshold is shared, evenly split by location count. */
 export function stockStatusAt(p: Product, locId: string, locationCount = 1): 'out' | 'low' | 'ok' {
+  if (locId === ALL_LOCATIONS) return stockStatus(p)
   const qty = stockAt(p, locId)
   const perLocThreshold = Math.max(1, Math.ceil(p.threshold / Math.max(1, locationCount)))
   if (qty <= 0) return 'out'
   if (qty <= perLocThreshold) return 'low'
   return 'ok'
+}
+
+/** Return products with `stock` rewritten to the given location's quantity, so
+ *  existing readers (inventoryValue, lowStock, cards) reflect that location.
+ *  For 'all' the products pass through unchanged (combined totals). */
+export function scopeProductsToLocation(products: Product[], locId: string): Product[] {
+  if (locId === ALL_LOCATIONS) return products
+  return products.map((p) => ({ ...p, stock: stockAt(p, locId), stockByLocation: undefined }))
+}
+
+/** Sales made at a location (or all sales for 'all' / untagged). */
+export function salesAtLocation<T extends { locationId?: string }>(sales: T[], locId: string): T[] {
+  if (locId === ALL_LOCATIONS) return sales
+  return sales.filter((s) => s.locationId === locId)
 }
 
 export function lowStock(products: Product[]): Product[] {

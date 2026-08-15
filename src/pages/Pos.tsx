@@ -34,6 +34,9 @@ export function PosPage() {
   const activeLocationId = useStore((s) => s.activeLocationId)
   const openModal = useUi((s) => s.openModal)
   const locCount = locations.length
+  // A till always sells from one concrete location ('all' → the first shop).
+  const posLocationId = activeLocationId === 'all' ? locations[0]?.id : activeLocationId
+  const posLocationName = locations.find((l) => l.id === posLocationId)?.name
 
   const [query, setQuery] = useState('')
   const [cat, setCat] = useState<string>('all')
@@ -62,7 +65,7 @@ export function PosPage() {
 
   const add = (id: string) => {
     const product = products.find((p) => p.id === id)!
-    const avail = stockAt(product, activeLocationId)
+    const avail = stockAt(product, posLocationId)
     if (avail <= 0) return
     setCart((c) => {
       const existing = c.find((l) => l.product.id === id)
@@ -138,6 +141,9 @@ export function PosPage() {
               <CatChip key={c.id} active={cat === c.id} onClick={() => setCat(c.id)} label={c.name} icon={c.icon} />
             ))}
           </div>
+          {activeLocationId === 'all' && posLocationName && (
+            <p className="text-xs text-ink-soft">Selling from <span className="font-semibold text-ink">{posLocationName}</span> · switch location in the top bar to sell from another.</p>
+          )}
         </div>
 
         {filtered.length === 0 ? (
@@ -145,8 +151,8 @@ export function PosPage() {
         ) : (
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
             {filtered.map((p) => {
-              const status = stockStatusAt(p, activeLocationId, locCount)
-              const locQty = stockAt(p, activeLocationId)
+              const status = stockStatusAt(p, posLocationId, locCount)
+              const locQty = stockAt(p, posLocationId)
               const out = status === 'out'
               const qty = inCart(p.id)
               return (

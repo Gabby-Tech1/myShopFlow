@@ -80,6 +80,7 @@ export function Topbar({ title, onMenu }: { title: string; onMenu: () => void })
               aria-label="Active location"
               style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundPosition: 'right 0.55rem center', backgroundRepeat: 'no-repeat', backgroundSize: '0.9rem' }}
             >
+              <option value="all">All locations</option>
               {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>

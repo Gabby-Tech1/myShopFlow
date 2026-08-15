@@ -151,6 +151,8 @@ export interface Sale {
   paymentMethod: PaymentMethod
   /** Pricing channel this sale used. */
   tier: PriceTier
+  /** Location the sale was made at. */
+  locationId?: string
   /** false for a credit sale until settled */
   paid: boolean
   amountPaid: number

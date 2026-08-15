@@ -220,6 +220,7 @@ export function buildSeed(): SeedState {
         total: subtotal,
         paymentMethod: method as Sale['paymentMethod'],
         tier,
+        locationId: rng() < 0.62 ? 'loc_main' : 'loc_branch',
         paid: !isCredit,
         amountPaid: isCredit ? 0 : subtotal,
         customerId: customer?.id,
