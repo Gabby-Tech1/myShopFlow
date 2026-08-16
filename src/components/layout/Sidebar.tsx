@@ -96,7 +96,7 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose:
         />
         <aside
           className={cn(
-            'absolute left-0 top-0 flex h-full w-[280px] flex-col bg-sidebar transition-transform duration-300',
+            'absolute left-0 top-0 flex h-full w-[240px] flex-col bg-sidebar transition-transform duration-300',
             mobileOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >

@@ -22,7 +22,7 @@ export function Explain({ term, text, className, inline = true }: ExplainProps) 
   const id = useId()
   const ref = useRef<HTMLSpanElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const [position, setPosition] = useState<{ left: number; top: number; below: boolean } | null>(null)
+  const [position, setPosition] = useState<{ left: number; top: number; below: boolean; arrowLeft: number } | null>(null)
   const body = text ?? (term ? explain(term) : undefined)
 
   useEffect(() => {
@@ -31,9 +31,11 @@ export function Explain({ term, text, className, inline = true }: ExplainProps) 
       const rect = buttonRef.current?.getBoundingClientRect()
       if (!rect) return
       const tooltipHalfWidth = 112
-      const left = Math.max(tooltipHalfWidth + 8, Math.min(rect.left + rect.width / 2, window.innerWidth - tooltipHalfWidth - 8))
+      const anchor = rect.left + rect.width / 2
+      const left = Math.max(tooltipHalfWidth + 8, Math.min(anchor, window.innerWidth - tooltipHalfWidth - 8))
       const below = rect.top < 110
-      setPosition({ left, top: below ? rect.bottom + 8 : rect.top - 8, below })
+      const arrowLeft = tooltipHalfWidth + anchor - left
+      setPosition({ left, top: below ? rect.bottom + 8 : rect.top - 8, below, arrowLeft })
     }
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -77,11 +79,11 @@ export function Explain({ term, text, className, inline = true }: ExplainProps) 
         <span
           id={id}
           role="tooltip"
-          className={cn('pointer-events-none fixed z-[200] w-56 -translate-x-1/2 rounded-xl bg-ink px-3 py-2 text-left text-xs font-medium leading-relaxed text-white shadow-pop animate-scale-in', position.below ? '' : '-translate-y-full')}
+          className={cn('pointer-events-none fixed z-[200] w-56 -translate-x-1/2 rounded-xl bg-ink px-3 py-2 text-left text-xs font-medium leading-relaxed text-white shadow-pop', position.below ? '' : '-translate-y-full')}
           style={{ left: position.left, top: position.top }}
         >
           {body}
-          <span className={cn('absolute left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-ink', position.below ? 'bottom-full translate-y-1/2' : 'top-full -translate-y-1/2')} />
+          <span className={cn('absolute h-2 w-2 -translate-x-1/2 rotate-45 bg-ink', position.below ? 'bottom-full translate-y-1/2' : 'top-full -translate-y-1/2')} style={{ left: position.arrowLeft }} />
         </span>
       , document.body)}
     </span>

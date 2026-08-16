@@ -103,6 +103,7 @@ export interface Product {
   name: string
   sku: string
   categoryId: string
+  condition?: 'new' | 'old'
   costPrice: number // admin-only in the UI
   salePrice: number // retail price per unit
   /** Wholesale (bulk) price per unit — optional. */

@@ -14,11 +14,13 @@ interface ModalProps {
   children?: ReactNode
   footer?: ReactNode
   size?: 'sm' | 'md' | 'lg'
+  mobileHeader?: ReactNode
+  mobileFullscreen?: boolean
 }
 
 const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }
 
-export function Modal({ open, onClose, title, description, children, footer, size = 'md' }: ModalProps) {
+export function Modal({ open, onClose, title, description, children, footer, size = 'md', mobileHeader, mobileFullscreen = false }: ModalProps) {
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -46,6 +48,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             onMouseDown={(e) => e.stopPropagation()}
             className={cn(
               'relative z-10 flex max-h-[calc(100dvh-0.75rem)] w-full flex-col overflow-hidden rounded-t-3xl bg-paper shadow-pop sm:max-h-[calc(100dvh-2rem)] sm:rounded-3xl',
+              mobileFullscreen && 'h-dvh max-h-dvh rounded-none sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:rounded-3xl',
               sizes[size],
             )}
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
@@ -53,8 +56,9 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 320, damping: 30 }}
           >
+            {mobileHeader && <div className="shrink-0 sm:hidden">{mobileHeader}</div>}
             {(title || description) && (
-              <div className="shrink-0 flex items-start justify-between gap-4 px-4 pt-5 sm:px-6 sm:pt-6">
+              <div className={cn('shrink-0 flex items-start justify-between gap-4 px-4 pt-5 sm:px-6 sm:pt-6', mobileHeader && 'hidden sm:flex')}>
                 <div>
                   {title && <h2 className="text-xl font-extrabold tracking-tight text-ink">{title}</h2>}
                   {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
@@ -68,8 +72,8 @@ export function Modal({ open, onClose, title, description, children, footer, siz
                 </button>
               </div>
             )}
-            {children && <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 [scrollbar-gutter:stable] sm:px-6">{children}</div>}
-            {footer && <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-hair bg-paper px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:gap-3 sm:px-6 sm:py-4">{footer}</div>}
+            {children && <div className={cn('min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 [scrollbar-gutter:stable] sm:px-6', mobileFullscreen && 'bg-canvas sm:bg-paper')}>{children}</div>}
+            {footer && <div className={cn('flex shrink-0 flex-wrap justify-end gap-2 border-t border-hair bg-paper px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:gap-3 sm:px-6 sm:py-4', mobileHeader && 'hidden sm:flex')}>{footer}</div>}
           </motion.div>
         </div>
       )}

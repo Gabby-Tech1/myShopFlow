@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Plus, Minus, Pencil, PackagePlus, ChevronRight, Boxes, ImagePlus, Trash2, FolderPlus, X } from 'lucide-react'
+import { Search, Plus, Minus, Pencil, PackagePlus, ChevronLeft, ChevronRight, Boxes, ImagePlus, Trash2, FolderPlus, X, Barcode } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { useCan } from '@/store/access'
 import { toast } from '@/store/toast'
@@ -142,9 +142,9 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
   const canCost = useCan('costPrice')
   const [step, setStep] = useState(1)
   const [categoryId, setCategoryId] = useState('')
-  const emptyForm = { name: '', sku: '', costPrice: '', salePrice: '', wholesalePrice: '', wholesaleMinQty: '', unit: 'each' as UnitOfMeasure, packSize: '', stock: '', threshold: '10', supplierId: '' }
+  const emptyForm = { name: '', sku: '', barcode: '', condition: '' as '' | 'new' | 'old', costPrice: '', salePrice: '', wholesalePrice: '', wholesaleMinQty: '', unit: 'each' as UnitOfMeasure, packSize: '', stock: '', threshold: '10', supplierId: '' }
   const [form, setForm] = useState(emptyForm)
-  const [attrsOn, setAttrsOn] = useState(false)
+  const [enabledAttrs, setEnabledAttrs] = useState<Partial<Record<keyof ProductAttributes, boolean>>>({})
   const [attrs, setAttrs] = useState<ProductAttributes>({})
   const [imageUrl, setImageUrl] = useState<string>()
   const [creatingCategory, setCreatingCategory] = useState(false)
@@ -152,7 +152,7 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
 
   useEffect(() => {
     if (open) {
-      setStep(1); setCategoryId(''); setForm(emptyForm); setAttrsOn(false); setAttrs({}); setImageUrl(undefined); setCreatingCategory(false); setCategoryName('')
+      setStep(1); setCategoryId(''); setForm(emptyForm); setEnabledAttrs({}); setAttrs({}); setImageUrl(undefined); setCreatingCategory(false); setCategoryName('')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -164,6 +164,7 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
       name: form.name,
       sku: form.sku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
       categoryId,
+      condition: form.condition || undefined,
       costPrice: parseFloat(form.costPrice) || 0,
       salePrice: parseFloat(form.salePrice) || 0,
       wholesalePrice: wholesale > 0 ? wholesale : undefined,
@@ -173,7 +174,8 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
       stock: parseInt(form.stock) || 0,
       threshold: parseInt(form.threshold) || 10,
       supplierId: form.supplierId || undefined,
-      attributes: attrsOn ? attrs : undefined,
+      barcode: form.barcode.trim() || undefined,
+      attributes: Object.keys(enabledAttrs).some((key) => enabledAttrs[key as keyof ProductAttributes]) ? attrs : undefined,
       imageUrl,
     })
     toast.success('Product added', `${form.name} is now in your inventory.`)
@@ -203,6 +205,15 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
       onClose={onClose}
       title="Add product"
       description={step === 1 ? 'Step 1 of 2 - choose a category' : 'Step 2 of 2 - product details'}
+      size={step === 2 ? 'lg' : 'md'}
+      mobileFullscreen={step === 2}
+      mobileHeader={step === 2 ? (
+        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center border-b border-hair bg-paper px-4">
+          <button type="button" onClick={() => setStep(1)} className="flex items-center text-sm font-bold text-canary-700"><ChevronLeft className="h-4 w-4" /> Category</button>
+          <h2 className="text-lg font-extrabold text-ink">New product</h2>
+          <button type="button" onClick={save} disabled={!form.name || !form.salePrice} className="justify-self-end text-sm font-bold text-canary-700 disabled:opacity-40">Save</button>
+        </div>
+      ) : undefined}
       footer={
         step === 1 ? (
           <>
@@ -243,22 +254,34 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5 pb-4 sm:pb-0">
           <ImageUpload value={imageUrl} onChange={setImageUrl} />
+          <div className="overflow-hidden rounded-2xl bg-paper ring-1 ring-hair">
+            <input id="np-name" aria-label="Product name" className="w-full border-0 bg-transparent px-5 py-5 text-base outline-none placeholder:text-ink-faint" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus />
+            <label className="flex items-center justify-between border-t border-hair px-5 py-4">
+              <span className="text-sm font-medium">State</span>
+              <select aria-label="Product state" className="bg-transparent text-right text-sm font-medium text-ink-soft outline-none" value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value as '' | 'new' | 'old' })}>
+                <option value="">Empty</option><option value="new">New</option><option value="old">Old</option>
+              </select>
+            </label>
+          </div>
+          <div className="relative"><input id="np-sku" className="input py-4 pr-12" placeholder="Barcode / SKU" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value, sku: e.target.value })} /><Barcode className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-canary-700" /></div>
           <div>
-            <label className="label" htmlFor="np-name">Product name</label>
-            <input id="np-name" className="input" placeholder="e.g. Coca-Cola 350ml" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label" htmlFor="np-sku">SKU</label>
-              <input id="np-sku" className="input" placeholder="auto" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+            <p className="eyebrow mb-2">Product descriptions</p>
+            <div className="overflow-hidden rounded-2xl bg-paper ring-1 ring-hair">
+              {ATTR_FIELDS.map((field) => {
+                const enabled = !!enabledAttrs[field.key]
+                return <div key={field.key} className="border-b border-hair last:border-0">
+                  <div className="flex min-h-14 items-center justify-between px-5">
+                    <label htmlFor={`attr-${field.key}`} className="text-sm font-medium text-ink">{field.label}</label>
+                    <button type="button" role="switch" aria-checked={enabled} aria-label={`Enable ${field.label}`} onClick={() => setEnabledAttrs((current) => ({ ...current, [field.key]: !enabled }))} className={cn('relative h-7 w-12 rounded-full transition-colors', enabled ? 'bg-canary' : 'bg-[#D8DCE3]')}><span className={cn('absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform', enabled && 'translate-x-5')} /></button>
+                  </div>
+                  {enabled && <input id={`attr-${field.key}`} autoFocus className="w-full border-t border-hair bg-canvas/50 px-5 py-3 text-sm outline-none placeholder:text-ink-faint focus:bg-white" placeholder={`Enter ${field.label.toLowerCase()}`} value={attrs[field.key] ?? ''} onChange={(e) => setAttrs({ ...attrs, [field.key]: e.target.value })} />}
+                </div>
+              })}
             </div>
-            <div>
-              <label className="label" htmlFor="np-stock">Opening stock</label>
-              <input id="np-stock" className="input tnum" inputMode="numeric" placeholder="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
-            </div>
           </div>
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-5 py-1 sm:hidden"><button type="button" aria-label="Decrease opening stock" onClick={() => setForm({ ...form, stock: String(Math.max(0, (parseInt(form.stock) || 0) - 1)) })} className="grid h-14 w-14 place-items-center rounded-2xl bg-canary text-white"><Minus /></button><input aria-label="Opening stock" inputMode="numeric" className="w-full bg-transparent text-center text-xl font-bold outline-none tnum" value={form.stock || '0'} onChange={(e) => setForm({ ...form, stock: e.target.value })} /><button type="button" aria-label="Increase opening stock" onClick={() => setForm({ ...form, stock: String((parseInt(form.stock) || 0) + 1) })} className="grid h-14 w-14 place-items-center rounded-2xl bg-canary text-white"><Plus /></button></div>
           <div className="grid grid-cols-2 gap-3">
             {canCost && (
               <div>
@@ -308,19 +331,6 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
                 {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-          </div>
-          <div className="rounded-xl border border-hair p-3">
-            <label className="flex cursor-pointer items-center justify-between">
-              <span className="text-sm font-semibold text-ink">Add optional attributes</span>
-              <input type="checkbox" checked={attrsOn} onChange={(e) => setAttrsOn(e.target.checked)} className="h-5 w-9 cursor-pointer appearance-none rounded-full bg-hair transition-colors checked:bg-canary relative before:absolute before:top-0.5 before:left-0.5 before:h-4 before:w-4 before:rounded-full before:bg-white before:transition-transform checked:before:translate-x-4" />
-            </label>
-            {attrsOn && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {ATTR_FIELDS.map((f) => (
-                  <input key={f.key} className="input py-2 text-sm" placeholder={f.label} value={attrs[f.key] ?? ''} onChange={(e) => setAttrs({ ...attrs, [f.key]: e.target.value })} />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -469,12 +479,15 @@ function ImageUpload({ value, onChange }: { value?: string; onChange: (value?: s
     onChange(await compressProductImage(file))
   }
   return (
-    <div>
-      <label className="label">Product image</label>
-      <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-hair bg-canvas/60 p-3 sm:flex-row sm:items-center">
-        {value ? <img src={value} alt="Product preview" className="h-24 w-full rounded-xl object-cover ring-1 ring-black/[0.06] sm:w-24" /> : <span className="grid h-24 w-full place-items-center rounded-xl bg-white text-ink-faint ring-1 ring-hair sm:w-24"><ImagePlus className="h-6 w-6" /></span>}
-        <div className="flex-1"><p className="text-sm font-semibold text-ink">Upload a clear product photo</p><p className="mt-1 text-xs text-ink-soft">JPG, PNG or WebP · automatically resized for the catalogue.</p><div className="mt-3 flex flex-wrap gap-2"><label className="btn h-9 bg-white px-3.5 text-[13px] text-ink ring-1 ring-hair hover:bg-canvas"><ImagePlus className="h-4 w-4" /> {value ? 'Replace' : 'Choose image'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => upload(e.target.files?.[0])} /></label>{value && <button type="button" onClick={() => onChange(undefined)} className="btn h-9 px-3 text-[13px] text-brick hover:bg-brick-50"><Trash2 className="h-4 w-4" /> Remove</button>}</div></div>
+    <div className="flex flex-col items-center">
+      <div className="relative aspect-square w-28 overflow-hidden rounded-2xl bg-white shadow-xs ring-1 ring-hair sm:w-32">
+        {value ? <img src={value} alt="Product preview" className="h-full w-full object-cover" /> : <span className="grid h-full w-full place-items-center text-ink-faint"><ImagePlus className="h-8 w-8" /></span>}
+        <label className="absolute inset-0 flex cursor-pointer items-end justify-center bg-transparent">
+          <span className="w-full bg-ink/65 py-2 text-center text-xs font-bold text-white">{value ? 'Edit' : 'Add photo'}</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+        </label>
       </div>
+      {value && <button type="button" onClick={() => onChange(undefined)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brick"><Trash2 className="h-3.5 w-3.5" /> Remove</button>}
     </div>
   )
 }
