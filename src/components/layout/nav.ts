@@ -23,7 +23,8 @@ export const NAV: { section: string; items: NavItem[] }[] = [
       { to: '/customers', label: 'Customers', icon: 'Users' },
       { to: '/suppliers', label: 'Suppliers', icon: 'Truck', cap: 'suppliers' },
       { to: '/cashflow', label: 'Cash Flow', icon: 'ArrowRightLeft', cap: 'cashflow' },
-      { to: '/reports', label: 'Reports', icon: 'BarChart3', cap: 'reports' },
+      { to: '/reports', label: 'Reports', icon: 'ChartColumnBig', cap: 'reports' },
+      { to: '/analytics', label: 'Analytics', icon: 'ChartSpline', cap: 'reports' },
     ],
   },
   {

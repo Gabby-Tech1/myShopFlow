@@ -65,7 +65,7 @@ export function ProductsPage() {
       {/* Summary */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile label="Products" value={products.length} icon={<Boxes className="h-5 w-5" />} hint="active items" />
-        <StatTile label="Retail value" value={money(retailValue(products))} icon={<Icon name="Tag" className="h-5 w-5" />} hint="at sale price" accent="ink" />
+        <StatTile label="Potential sales" value={money(retailValue(products))} icon={<Icon name="Tag" className="h-5 w-5" />} hint="at sale price" accent="ink" />
         {canCost && <StatTile label="Inventory value" term="Inventory Value" value={money(inventoryValue(products))} icon={<Icon name="Wallet" className="h-5 w-5" />} hint="at cost" accent="inflow" />}
         <StatTile label="Needs attention" value={low.length} icon={<Icon name="PackageMinus" className="h-5 w-5" />} hint="low / out of stock" accent="brick" />
       </div>
@@ -256,6 +256,10 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
       ) : (
         <div className="space-y-5 pb-4 sm:pb-0">
           <ImageUpload value={imageUrl} onChange={setImageUrl} />
+          <div className="sm:hidden">
+            <p className="eyebrow mb-2">Opening stock</p>
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-5 py-1"><button type="button" aria-label="Decrease opening stock" onClick={() => setForm({ ...form, stock: String(Math.max(0, (parseInt(form.stock) || 0) - 1)) })} className="grid h-14 w-14 place-items-center rounded-2xl bg-canary text-white"><Minus /></button><input aria-label="Opening stock" inputMode="numeric" className="w-full bg-transparent text-center text-xl font-bold outline-none tnum" value={form.stock || '0'} onChange={(e) => setForm({ ...form, stock: e.target.value })} /><button type="button" aria-label="Increase opening stock" onClick={() => setForm({ ...form, stock: String((parseInt(form.stock) || 0) + 1) })} className="grid h-14 w-14 place-items-center rounded-2xl bg-canary text-white"><Plus /></button></div>
+          </div>
           <div className="overflow-hidden rounded-2xl bg-paper ring-1 ring-hair">
             <input id="np-name" aria-label="Product name" className="w-full border-0 bg-transparent px-5 py-5 text-base outline-none placeholder:text-ink-faint" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus />
             <label className="flex items-center justify-between border-t border-hair px-5 py-4">
@@ -281,7 +285,6 @@ function AddProductModal({ open, onClose }: { open: boolean; onClose: () => void
               })}
             </div>
           </div>
-          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-5 py-1 sm:hidden"><button type="button" aria-label="Decrease opening stock" onClick={() => setForm({ ...form, stock: String(Math.max(0, (parseInt(form.stock) || 0) - 1)) })} className="grid h-14 w-14 place-items-center rounded-2xl bg-canary text-white"><Minus /></button><input aria-label="Opening stock" inputMode="numeric" className="w-full bg-transparent text-center text-xl font-bold outline-none tnum" value={form.stock || '0'} onChange={(e) => setForm({ ...form, stock: e.target.value })} /><button type="button" aria-label="Increase opening stock" onClick={() => setForm({ ...form, stock: String((parseInt(form.stock) || 0) + 1) })} className="grid h-14 w-14 place-items-center rounded-2xl bg-canary text-white"><Plus /></button></div>
           <div className="grid grid-cols-2 gap-3">
             {canCost && (
               <div>

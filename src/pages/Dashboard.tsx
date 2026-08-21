@@ -146,9 +146,9 @@ export function DashboardPage() {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2.5 sm:gap-3 lg:min-w-[420px]">
-              <HealthStat icon="CheckCircle2" tone="ok" label="In Stock" value={okCount} />
-              <HealthStat icon="AlertTriangle" tone="low" label="Low Stock" value={lowCount} />
-              <HealthStat icon="XCircle" tone="out" label="Out of Stock" value={outCount} />
+              <HealthStat icon="CircleCheckBig" tone="ok" label="In Stock" value={okCount} />
+              <HealthStat icon="TriangleAlert" tone="low" label="Low Stock" value={lowCount} />
+              <HealthStat icon="CircleX" tone="out" label="Out of Stock" value={outCount} />
             </div>
           </div>
           <div className="mt-5 flex h-2.5 overflow-hidden rounded-full bg-canvas ring-1 ring-line">

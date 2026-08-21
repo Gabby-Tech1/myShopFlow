@@ -13,6 +13,7 @@ import { LocationsPage } from '@/pages/Locations'
 import { CustomersPage } from '@/pages/Customers'
 import { CashFlowPage } from '@/pages/CashFlow'
 import { ReportsPage } from '@/pages/Reports'
+import { AnalyticsPage } from '@/pages/Analytics'
 import { CurrencyPage } from '@/pages/Currency'
 import { ActivityPage } from '@/pages/Activity'
 import { SettingsPage } from '@/pages/Settings'
@@ -56,6 +57,7 @@ export default function App() {
         <Route path="/suppliers" element={<RequireCap cap="suppliers"><SuppliersPage /></RequireCap>} />
         <Route path="/cashflow" element={<RequireCap cap="cashflow"><CashFlowPage /></RequireCap>} />
         <Route path="/reports" element={<RequireCap cap="reports"><ReportsPage /></RequireCap>} />
+        <Route path="/analytics" element={<RequireCap cap="reports"><AnalyticsPage /></RequireCap>} />
         <Route path="/currency" element={<CurrencyPage />} />
         <Route path="/audit-logs" element={<RequireCap cap="activity"><ActivityPage /></RequireCap>} />
         <Route path="/activity" element={<Navigate to="/audit-logs" replace />} />

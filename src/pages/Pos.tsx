@@ -43,15 +43,17 @@ export function PosPage() {
   const [cart, setCart] = useState<CartLine[]>([])
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [tier, setTier] = useState<PriceTier>('retail')
-  const [customerId, setCustomerId] = useState('')
+  const [customerName, setCustomerName] = useState('')
   const [cartOpenMobile, setCartOpenMobile] = useState(false)
   const [receipt, setReceipt] = useState<Sale | null>(null)
+  const registerCustomer = useStore((s) => s.registerCustomer)
 
-  // Selecting a wholesale account switches pricing to wholesale automatically.
-  const selectCustomer = (id: string) => {
-    setCustomerId(id)
-    const c = customers.find((x) => x.id === id)
-    if (c) setTier(c.type)
+  // The customer field is a combobox: pick an existing name or just type a new one.
+  const matchedCustomer = customers.find((c) => c.name.trim().toLowerCase() === customerName.trim().toLowerCase())
+  const setCustomer = (name: string) => {
+    setCustomerName(name)
+    const c = customers.find((x) => x.name.trim().toLowerCase() === name.trim().toLowerCase())
+    if (c) setTier(c.type) // picking a wholesale account switches pricing automatically
   }
 
   const filtered = useMemo(() => {
@@ -87,9 +89,15 @@ export function PosPage() {
 
   const checkout = () => {
     if (!cart.length) return
-    if (method === 'credit' && !customerId) {
-      toast.error('Choose a customer', 'Credit sales must be linked to a customer.')
+    const typedName = customerName.trim()
+    if (method === 'credit' && !typedName) {
+      toast.error('Add a customer', 'Credit sales must be linked to a customer — pick one or type a name.')
       return
+    }
+    // Resolve the customer: an existing match, or quick-create from the typed name.
+    let customerId = matchedCustomer?.id
+    if (!customerId && typedName) {
+      customerId = registerCustomer(typedName, '', 'manual', undefined, { type: tier }).id
     }
     const items: SaleItem[] = cart.map((l) => {
       const unitPrice = priceFor(l.product, tier, l.qty)
@@ -113,7 +121,7 @@ export function PosPage() {
         : `${money(sale.total)} received · stock and cash updated.`,
     )
     setCart([])
-    setCustomerId('')
+    setCustomerName('')
     setMethod('cash')
     setTier('retail')
     setCartOpenMobile(false)
@@ -209,8 +217,8 @@ export function PosPage() {
             method={method}
             setMethod={setMethod}
             customers={customers}
-            customerId={customerId}
-            setCustomerId={selectCustomer}
+            customerName={customerName}
+            setCustomerName={setCustomer}
             tier={tier}
             setTier={setTier}
             onInc={add}
@@ -247,8 +255,8 @@ export function PosPage() {
               method={method}
               setMethod={setMethod}
               customers={customers}
-              customerId={customerId}
-              setCustomerId={selectCustomer}
+              customerName={customerName}
+              setCustomerName={setCustomer}
               tier={tier}
               setTier={setTier}
               onInc={add}
@@ -260,6 +268,13 @@ export function PosPage() {
           </div>
         </div>
       )}
+
+      {/* Shared suggestion list for the customer combobox (both cart panels reference it). */}
+      <datalist id="pos-customer-list">
+        {customers.map((c) => (
+          <option key={c.id} value={c.name}>{c.type === 'wholesale' ? `Wholesale${c.company ? ` · ${c.company}` : ''}` : c.phone}</option>
+        ))}
+      </datalist>
 
       <ReceiptModal sale={receipt} open={!!receipt} onClose={() => setReceipt(null)} />
       </div>
@@ -290,8 +305,8 @@ interface CartPanelProps {
   tier: PriceTier
   setTier: (t: PriceTier) => void
   customers: ReturnType<typeof useStore.getState>['customers']
-  customerId: string
-  setCustomerId: (id: string) => void
+  customerName: string
+  setCustomerName: (name: string) => void
   onInc: (id: string) => void
   onDec: (id: string) => void
   onRemove: (id: string) => void
@@ -379,12 +394,15 @@ function CartPanel(p: CartPanelProps) {
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Customer {p.method === 'credit' && <span className="text-brick">*</span>}</p>
             <button onClick={p.onRegister} className="flex items-center gap-1 text-xs font-semibold text-canary-700 hover:underline cursor-pointer"><UserPlus className="h-3.5 w-3.5" /> New</button>
           </div>
-          <select className="input py-2 text-sm" value={p.customerId} onChange={(e) => p.setCustomerId(e.target.value)}>
-            <option value="">Walk-in customer</option>
-            {p.customers.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}{c.type === 'wholesale' ? ` · Wholesale${c.company ? ` (${c.company})` : ''}` : ''}</option>
-            ))}
-          </select>
+          <input
+            list="pos-customer-list"
+            className="input py-2 text-sm"
+            placeholder="Walk-in — or type a name"
+            value={p.customerName}
+            onChange={(e) => p.setCustomerName(e.target.value)}
+            autoComplete="off"
+          />
+          <p className="mt-1 text-[11px] text-ink-faint">Pick a saved customer or type a new name — it’s added automatically.</p>
         </div>
 
         <div className="flex items-center justify-between pt-1">
