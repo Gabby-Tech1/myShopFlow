@@ -177,7 +177,7 @@ export function DashboardPage() {
       {canFin && (
         <section>
           <p className="eyebrow mb-3">Financial summary · {range.label}</p>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
             <StatTile emphasis="quiet" label="Revenue" term="Revenue" value={money(profit.revenue)} delta={revDelta} icon={<Icon name="Coins" className="h-5 w-5" />} hint="vs last month" />
             <StatTile emphasis="quiet" label="Net Profit" term="Net Profit" value={money(profit.netProfit)} icon={<TrendingUp className="h-5 w-5" />} hint={`${profit.margin}% margin`} />
             <StatTile emphasis="quiet" label="Cash Balance" term="Cash Balance" value={money(cash)} icon={<Wallet className="h-5 w-5" />} hint="cash · MoMo · bank" />
