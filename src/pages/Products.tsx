@@ -76,18 +76,18 @@ export function ProductsPage() {
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-soft" />
           <input className="input pl-11" placeholder="Search products…" value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <select className="input w-auto py-2.5" value={cat} onChange={(e) => setCat(e.target.value)}>
+        <div className="flex flex-wrap items-center gap-2">
+          <select className="input flex-1 py-2.5 sm:w-auto sm:flex-none" value={cat} onChange={(e) => setCat(e.target.value)}>
             <option value="all">All categories</option>
             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-          <select className="input w-auto py-2.5" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
+          <select className="input flex-1 py-2.5 sm:w-auto sm:flex-none" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
             <option value="all">Any stock</option>
             <option value="ok">In stock</option>
             <option value="low">Low stock</option>
             <option value="out">Out of stock</option>
           </select>
-          <Button className="shrink-0 sm:hidden" onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add</Button>
+          <Button className="w-full shrink-0 sm:hidden text-white" onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add product</Button>
         </div>
       </div>
 
