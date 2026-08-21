@@ -56,6 +56,7 @@ import {
   salesTrend,
   scopeProductsToLocation,
   selectCashBalance,
+  stockStatus,
   totalOutstanding,
 } from '@/store/selectors'
 import { buildInsights } from '@/store/insights'
@@ -94,6 +95,13 @@ export function DashboardPage() {
   const outstanding = totalOutstanding(store.customers)
   const low = lowStock(store.products)
 
+  // Inventory health breakdown (location-scoped).
+  const totalProducts = store.products.length
+  const outCount = store.products.filter((p) => stockStatus(p) === 'out').length
+  const lowCount = store.products.filter((p) => stockStatus(p) === 'low').length
+  const okCount = totalProducts - outCount - lowCount
+  const pct = (n: number) => (totalProducts ? (n / totalProducts) * 100 : 0)
+
   const revThis = revenueOf(periodSales)
   const revPrev = revenueOf(prevSales)
   const revDelta = revPrev > 0 ? ((revThis - revPrev) / revPrev) * 100 : undefined
@@ -123,30 +131,59 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Stat tiles */}
-      <div data-tour="dashboard-overview" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Today’s Sales" value={money(revenueOf(todaySales))} icon={<ShoppingCart className="h-5 w-5" />} hint={`${todaySales.length} sale${todaySales.length === 1 ? '' : 's'} today`} />
-        <StatTile label="Outstanding" term="Outstanding" value={money(outstanding)} icon={<HandCoins className="h-5 w-5" />} accent="brick" hint="owed by customers" />
-        {canFin ? (
-          <>
-            <StatTile label="Cash Balance" term="Cash Balance" value={money(cash)} icon={<Wallet className="h-5 w-5" />} accent="inflow" hint="cash · MoMo · bank" />
-            <StatTile label="Net Profit" term="Net Profit" value={money(profit.netProfit)} icon={<TrendingUp className="h-5 w-5" />} accent="ink" hint={range.label.toLowerCase()} />
-          </>
-        ) : (
-          <>
-            <StatTile label="Products" value={store.products.length} icon={<Boxes className="h-5 w-5" />} hint="in catalogue" />
-            <StatTile label="Low stock" value={low.length} icon={<Icon name="PackageMinus" className="h-5 w-5" />} accent="brick" hint="need restock" />
-          </>
-        )}
-      </div>
+      {/* Inventory Health — the first thing the owner sees */}
+      <section data-tour="dashboard-overview">
+        <Card className="p-5 sm:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-ink text-white"><Icon name="Package" className="h-7 w-7" strokeWidth={2} /></span>
+              <div>
+                <p className="eyebrow">Inventory health</p>
+                <p className="mt-1 flex items-baseline gap-2">
+                  <span className="text-[32px] font-extrabold leading-none tracking-tightest text-ink tnum">{totalProducts}</span>
+                  <span className="text-base font-semibold text-ink-soft">Products</span>
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3 lg:min-w-[420px]">
+              <HealthStat icon="CheckCircle2" tone="ok" label="In Stock" value={okCount} />
+              <HealthStat icon="AlertTriangle" tone="low" label="Low Stock" value={lowCount} />
+              <HealthStat icon="XCircle" tone="out" label="Out of Stock" value={outCount} />
+            </div>
+          </div>
+          <div className="mt-5 flex h-2.5 overflow-hidden rounded-full bg-canvas ring-1 ring-line">
+            <div className="bg-inflow" style={{ width: `${pct(okCount)}%` }} />
+            <div className="bg-warn" style={{ width: `${pct(lowCount)}%` }} />
+            <div className="bg-brick" style={{ width: `${pct(outCount)}%` }} />
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="text-xs text-ink-soft">{okCount} of {totalProducts} products well stocked{outCount > 0 ? ` · ${outCount} out of stock` : lowCount > 0 ? ` · ${lowCount} running low` : ''}.</p>
+            <Link to="/products" className="shrink-0 text-xs font-semibold text-canary-700 hover:underline">Manage products →</Link>
+          </div>
+        </Card>
+      </section>
 
-      {canFin && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatTile label="Revenue" term="Revenue" value={money(profit.revenue)} delta={revDelta} icon={<Icon name="Coins" className="h-5 w-5" />} hint={`vs last month`} />
-          <StatTile label="Profit Margin" term="Profit Margin" value={`${profit.margin}%`} icon={<Percent className="h-5 w-5" />} accent="inflow" hint="of revenue" />
-          <StatTile label="Inventory Value" term="Inventory Value" value={money(invValue)} icon={<Boxes className="h-5 w-5" />} accent="ink" hint="at cost" />
-          <StatTile label="Low stock" value={low.length} icon={<Icon name="PackageMinus" className="h-5 w-5" />} accent="brick" hint="need restock" />
+      {/* Today at a glance — operational, medium emphasis */}
+      <section>
+        <p className="eyebrow mb-3">Today at a glance</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <StatTile label="Today’s Sales" value={money(revenueOf(todaySales))} icon={<ShoppingCart className="h-5 w-5" />} hint={`${todaySales.length} sale${todaySales.length === 1 ? '' : 's'} today`} />
+          <StatTile label="Outstanding" term="Outstanding" value={money(outstanding)} icon={<HandCoins className="h-5 w-5" />} accent="brick" hint="owed by customers" />
+          <StatTile label="Customers" value={store.customers.length} icon={<Icon name="Users" className="h-5 w-5" />} hint="on record" />
         </div>
+      </section>
+
+      {/* Financial summary — present but quiet (secondary) */}
+      {canFin && (
+        <section>
+          <p className="eyebrow mb-3">Financial summary · {range.label}</p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatTile emphasis="quiet" label="Revenue" term="Revenue" value={money(profit.revenue)} delta={revDelta} icon={<Icon name="Coins" className="h-5 w-5" />} hint="vs last month" />
+            <StatTile emphasis="quiet" label="Net Profit" term="Net Profit" value={money(profit.netProfit)} icon={<TrendingUp className="h-5 w-5" />} hint={`${profit.margin}% margin`} />
+            <StatTile emphasis="quiet" label="Cash Balance" term="Cash Balance" value={money(cash)} icon={<Wallet className="h-5 w-5" />} hint="cash · MoMo · bank" />
+            <StatTile emphasis="quiet" label="Inventory Value" term="Inventory Value" value={money(invValue)} icon={<Boxes className="h-5 w-5" />} hint="at cost" />
+          </div>
+        </section>
       )}
 
       {/* Best-of cards */}
@@ -350,6 +387,17 @@ function DashboardTutorial() {
 
 function activityIcon(module: string) {
   return module === 'sales' ? 'ShoppingCart' : module === 'inventory' ? 'Package' : module === 'customers' ? 'Users' : module === 'expenses' ? 'Receipt' : module === 'cashflow' ? 'ArrowRightLeft' : 'Activity'
+}
+
+function HealthStat({ icon, tone, label, value }: { icon: string; tone: 'ok' | 'low' | 'out'; label: string; value: number }) {
+  const color = tone === 'ok' ? 'text-inflow bg-inflow/10' : tone === 'low' ? 'text-warn bg-warn/10' : 'text-brick bg-brick/10'
+  return (
+    <div className="rounded-xl bg-canvas px-3 py-2.5 ring-1 ring-line">
+      <span className={`mb-2 inline-grid h-7 w-7 place-items-center rounded-lg ${color}`}><Icon name={icon} className="h-4 w-4" strokeWidth={2.2} /></span>
+      <p className="text-xl font-extrabold leading-none text-ink tnum">{value}</p>
+      <p className="mt-1 text-[11px] font-semibold text-ink-soft">{label}</p>
+    </div>
+  )
 }
 
 function BestCard({ icon, label, term, primary, secondary }: { icon: React.ReactNode; label: string; term?: string; primary: string; secondary: string }) {
