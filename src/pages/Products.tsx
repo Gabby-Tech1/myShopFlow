@@ -65,7 +65,7 @@ export function ProductsPage() {
       {/* Summary */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile label="Products" value={products.length} icon={<Boxes className="h-5 w-5" />} hint="active items" />
-        <StatTile label="Potential sales" value={money(retailValue(products))} icon={<Icon name="Tag" className="h-5 w-5" />} hint="at sale price" accent="ink" />
+        <StatTile label="Potential sales" term="Potential Sales" value={money(retailValue(products))} icon={<Icon name="Tag" className="h-5 w-5" />} hint="at sale price" accent="ink" />
         {canCost && <StatTile label="Inventory value" term="Inventory Value" value={money(inventoryValue(products))} icon={<Icon name="Wallet" className="h-5 w-5" />} hint="at cost" accent="inflow" />}
         <StatTile label="Needs attention" value={low.length} icon={<Icon name="PackageMinus" className="h-5 w-5" />} hint="low / out of stock" accent="brick" />
       </div>

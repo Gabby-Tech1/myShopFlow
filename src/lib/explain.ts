@@ -5,6 +5,8 @@ export const TERMS: Record<string, string> = {
   'Cash Balance': 'The money your business has right now across cash, bank, and Mobile Money.',
   'Net Cash Flow': 'The money that came in minus the money that went out during this period.',
   'Inventory Value': 'What the stock you currently hold cost you to buy.',
+  'Potential Sales': 'The amount you could make if you sold all your current stock at the prices you set.',
+  'Retail Value': 'The amount you could make if you sold all your current stock at the prices you set.',
   'Gross Profit': 'Profit left after deducting the cost of products sold — before other expenses.',
   'Net Profit': 'Profit after all recorded expenses are taken out of your sales.',
   'Profit Margin': 'The share of each sale that becomes profit.',
